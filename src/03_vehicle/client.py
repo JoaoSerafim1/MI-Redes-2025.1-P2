@@ -3,6 +3,9 @@ import json
 import socket
 import threading
 
+#Importa os componentes utilizados da biblioteca Paho MQTT
+from paho.mqtt import client as mqtt_client
+
 #Importa as bibliotecas customizadas da aplicacao
 from lib.db import *
 from lib.io import *
@@ -10,7 +13,6 @@ from lib.pr import *
 
 #Importa customTkinter
 import customtkinter as ctk
-
 
 #Classe do usuario
 class User():
@@ -24,6 +26,7 @@ class User():
         self.capacity = ""
         self.vehicle = ""
         self.payment_history = {}
+        self.mqttClientReceiver = mqtt_client.Client()
     
     #Funcao para enviar uma requisicao ao servidor
     def sendRequest(self, request):
@@ -58,50 +61,55 @@ class User():
 
     #Funcao para receber uma resposta de requisicao
     def listenToResponse(self):
+        
+        broker = 'localhost'
+        port = 8002
+        topic = 'response'
+        timeout = 2
 
-        #Cria o soquete, torna a conexao reciclavel, estabelece um timeout (2 segundos), reserva a porta local 8002 para a conexao e liga o modo de escuta
-        socket_receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket_receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        socket_receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        socket_receiver.settimeout(2.0)
-        socket_receiver.bind((socket.gethostbyname(socket.gethostname()), 8002))
-        socket_receiver.listen(2)
+        decodedBytes = ""
+        add = ("", 0)
+        content = ""
 
-        #Valores iniciais da mensagem de resposta (mensagem vazia)
-        msg = bytes([])
-        add = ""
+        #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
+        def on_message(client, userdata, msg):
+            
+            #Decodifica a mensagem (a qual foi enviada em formato "bytes", codec "UTF-8")
+            decodedBytes = msg.payload.decode('UTF-8')
+            
+            print(decodedBytes)
+            
+            #Desconecta do broker
+            self.mqttClientReceiver.disconnect()
+            
+        self.mqttClientReceiver.on_message = on_message
         
-        try:
-            #Espera a mensagem pelo tempo estipulado no timeout
-            conn, add = socket_receiver.accept()
-            msg = conn.recv(1024)
-        except:
-            pass
+        #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
+        self.mqttClientReceiver.connect(broker=broker, port=port, keepalive=timeout)
+        self.mqttClientReceiver.subscribe(topic)
+        self.mqttClientReceiver.loop_forever()
         
-        #Fecha a conexao (desfaz o soquete)
-        socket_receiver.close()
-        
-        #Decodifica a mensagem (a qual foi enviada em formato "bytes", codec "UTF-8")
-        decodedBytes = msg.decode('UTF-8')
-        
-        #Se uma resposta valida foi recebida, a mensagem nao deve ser vazia
-        if (len(decodedBytes) > 0):
+        #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
+        if (len(decodedBytes) == 3):
 
             #print("=============================================")
             #print(add)
             #print(msg)
             #print(decodedBytes)
             #print("=============================================")
+            
+            try:
+                #De-serializa a mensagem decodificada 
+                unserializedObj = json.loads(decodedBytes)
 
-            #De-serializa a mensagem decodificada 
-            unserializedObj = json.loads(decodedBytes)
-
-            #Retorna o objeto da mensagem
-            return (add, unserializedObj)
+                #Separa a parte do endereco referente ao endereco IP
+                add = (unserializedObj[0], unserializedObj[1])
+                content = unserializedObj[2]
+            except:
+                pass
         
-        #Retorna atributos de uma mensagem nao-recebida ou vazia
-        return (add, "")
-    
+        #Retorna o objeto da mensagem
+        return (add, content)
 
     #Funcao para registrar o veiculo
     def registerVehicle(self):
