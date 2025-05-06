@@ -19,10 +19,10 @@ RUN apt-get update -y && \
 RUN pip install customtkinter
 
 #Install Mosquitto Broker
-#RUN apt-get update -y && \
-#    apt-get upgrade -y && \
-#    apt-get install -y mosquitto && \
-#    apt-get install -y mosquitto-clients
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install -y mosquitto && \
+    apt-get install -y mosquitto-clients
 
 #Install Paho MQTT
 RUN apt-get update -y && \
