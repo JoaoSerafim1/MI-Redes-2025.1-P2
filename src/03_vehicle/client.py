@@ -1,7 +1,6 @@
 #Importa bibliotecas basicas do python 3
 import json
 import socket
-import uuid
 import time
 import threading
 
@@ -29,18 +28,6 @@ class User():
         self.vehicle = ""
         self.payment_history = {}
         self.clientIP = str(socket.gethostbyname(socket.gethostname()))
-        self.mqttClientSender = mqtt_client.Client(client_id=(self.clientIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
-        self.mqttClientReceiver = mqtt_client.Client(client_id=(self.clientIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
-
-        #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
-        def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
-            
-            global decodedBytes
-
-            decodedBytes = msg.payload.decode()
-            
-        self.mqttClientReceiver.on_message = on_message
-
     
     #Funcao para enviar uma requisicao ao servidor
     def sendRequest(self, request):
@@ -63,10 +50,11 @@ class User():
             #Serializa a resposta utilizando json
             serializedRequest = json.dumps(mqttMessage)
 
-            self.mqttClientSender.connect(broker, port)
-            self.mqttClientSender.loop_start()
-            self.mqttClientSender.publish(topic, serializedRequest)
-            self.mqttClientSender.loop_stop()
+            mqttClientSender = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+            mqttClientSender.connect(broker, port)
+            mqttClientSender.loop_start()
+            mqttClientSender.publish(topic, serializedRequest)
+            mqttClientSender.loop_stop()
         except:
             pass
 
@@ -85,18 +73,37 @@ class User():
 
         decodedBytes = ""
 
-        #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
-        self.mqttClientReceiver.connect(broker, port)
-        self.mqttClientReceiver.subscribe(topic)
-        self.mqttClientReceiver.loop_start()
+        mqttClientReceiver = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
 
-        start_time = time.time()
+        #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
+        def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
+            
+            global decodedBytes
 
-        while (((time.time() - start_time) < 2) and (decodedBytes == "")):
+            decodedBytes = msg.payload.decode()
+    
+        mqttClientReceiver.on_message = on_message
 
-            time.sleep(0.1)
+        try:
+            #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
+            mqttClientReceiver.connect(broker, port)
+            mqttClientReceiver.subscribe(topic)
+            mqttClientReceiver.loop_start()
 
-        self.mqttClientReceiver.loop_stop()
+            start_time = time.time()
+
+            while (((time.time() - start_time) < 10) and (decodedBytes == "")):
+                pass
+
+            mqttClientReceiver.loop_stop()
+            mqttClientReceiver.unsubscribe(topic)
+            mqttClientReceiver.disconnect()
+
+        except:
+            pass
+
+        byteCopy = ("" + decodedBytes)
+        decodedBytes = ""
 
         #print("=============================================")
         #print(decodedBytes)
@@ -104,7 +111,7 @@ class User():
         
         try:
             #De-serializa a mensagem decodificada 
-            unserializedObj = json.loads(decodedBytes)
+            unserializedObj = json.loads(byteCopy)
 
             #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
             if (len(unserializedObj) == 3):
@@ -446,13 +453,13 @@ displayPurchaseTotal = "0"
 displayPurchasePrice = "0"
 displayPurchaseCharge = "0"
 
-broker = 'broker.emqx.io'
-
 #Cria um dicionario dos atributos do veiculo
 dataTable = {}
 
 #Pergunta endereco do servidor
 serverAddress = input("Insira o endereço IP do servidor: ")
+
+broker = 'broker.emqx.io'
 
 #Verifica se o arquivo de texto "ID.txt" esta presente, e caso nao esteja...
 if (verifyFile(["vehicledata"], "ID.txt") == False):

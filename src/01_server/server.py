@@ -3,7 +3,6 @@ import json
 import string
 import random
 import socket
-import uuid
 import datetime
 import time
 import threading
@@ -42,20 +41,8 @@ isExecuting = True
 threadCount = 1
 
 serverIP = socket.gethostbyname(socket.gethostname())
-mqttClientSender = mqtt_client.Client(client_id=(serverIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
-mqttClientReceiver = mqtt_client.Client(client_id=(serverIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
 broker = 'broker.emqx.io'
 
-decodedBytes = ""
-
-#Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
-def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
-    
-    global decodedBytes
-
-    decodedBytes = msg.payload.decode()
-    
-mqttClientReceiver.on_message = on_message
 
 #Funcao para obter um novo ID aleatorio
 def getRandomID():
@@ -104,10 +91,6 @@ def getRandomID():
 #Funcao para receber uma requisicao
 def listenToRequest(timeout):
     
-    global receiverLock
-    global mqttClientReceiver
-    global decodedBytes
-    
     global broker
     port = 1883
     topic = "request"
@@ -115,22 +98,35 @@ def listenToRequest(timeout):
     add = ("", 0)
     content = ""
 
+    mqttClientReceiver = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+    
+    setattr(mqttClientReceiver, "decodedBytes", "")
+
+    #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
+    def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
+        setattr(client, "decodedBytes", msg.payload.decode())
+        
+    mqttClientReceiver.on_message = on_message
+
     receiverLock.acquire()
 
-    decodedBytes = ""
+    try:
+        #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
+        mqttClientReceiver.connect(broker, port)
+        mqttClientReceiver.subscribe(topic)
+        mqttClientReceiver.loop_start()
 
-    #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
-    mqttClientReceiver.connect(broker, port)
-    mqttClientReceiver.subscribe(topic)
-    mqttClientReceiver.loop_start()
+        start_time = time.time()
 
-    start_time = time.time()
+        while (((time.time() - start_time) < timeout) and (mqttClientReceiver.decodedBytes == "")):
+            pass
+            
+        mqttClientReceiver.loop_stop()
+        mqttClientReceiver.unsubscribe(topic)
+        mqttClientReceiver.disconnect()
 
-    while (((time.time() - start_time) < timeout) and (decodedBytes == "")):
-
-        time.sleep(0.1)
-
-    mqttClientReceiver.loop_stop()
+    except:
+        pass
 
     receiverLock.release()
 
@@ -140,7 +136,7 @@ def listenToRequest(timeout):
     
     try:
         #De-serializa a mensagem decodificada 
-        unserializedObj = json.loads(decodedBytes)
+        unserializedObj = json.loads(mqttClientReceiver.decodedBytes)
 
         #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
         if (len(unserializedObj) == 3):
@@ -159,7 +155,6 @@ def sendResponse(clientAddress, response):
 
     #Globais utilizadas
     global senderLock
-    global mqttClientSender
     global serverIP
 
     #Obtem a string do endereco do cliente
@@ -182,6 +177,7 @@ def sendResponse(clientAddress, response):
 
         senderLock.acquire()
 
+        mqttClientSender = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
         mqttClientSender.connect(broker, port)
         mqttClientSender.loop_start()
         mqttClientSender.publish(topic, serializedRequest)
@@ -726,6 +722,9 @@ def requestCatcher():
         #Espera chegar uma requisicao
         clientAddress, requestInfo = listenToRequest(5)
 
+        #Obtem a string de endereco do cliente
+        clientAddressString, _ = clientAddress
+
         #Se o tamamanho da lista de requisicao for adequado
         if (len(requestInfo) >= 3):
             
@@ -733,9 +732,6 @@ def requestCatcher():
             requestID = requestInfo[0]
             requestName = requestInfo[1]
             requestParameters = requestInfo[2]
-
-            #Obtem a string de endereco do cliente
-            clientAddressString, _ = clientAddress
 
             #Concatena o nome do arquivo para a entrada da requisicao
             requestFileName = (clientAddressString.strip('.') + ".json")
@@ -809,7 +805,7 @@ def requestCatcher():
                 sendResponse(clientAddress, requestResult)
 
         #Caso contrario e se o endereco do cliente nao for vazio
-        elif clientAddress != "":
+        elif clientAddressString != "":
             
             #Responde que a requisicao e invalida
             sendResponse(clientAddress, 'ERR')
