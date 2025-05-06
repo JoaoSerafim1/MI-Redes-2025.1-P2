@@ -1,6 +1,8 @@
 #Importa bibliotecas basicas do python 3
 import json
 import socket
+import uuid
+import time
 import threading
 
 #Importa os componentes utilizados da biblioteca Paho MQTT
@@ -26,91 +28,97 @@ class User():
         self.capacity = ""
         self.vehicle = ""
         self.payment_history = {}
-        self.mqttClientReceiver = mqtt_client.Client()
+        self.clientIP = str(socket.gethostbyname(socket.gethostname()))
+        self.mqttClientSender = mqtt_client.Client(client_id=(self.clientIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+        self.mqttClientReceiver = mqtt_client.Client(client_id=(self.clientIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+
+        #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
+        def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
+            
+            global decodedBytes
+
+            decodedBytes = msg.payload.decode()
+            
+        self.mqttClientReceiver.on_message = on_message
+
     
     #Funcao para enviar uma requisicao ao servidor
     def sendRequest(self, request):
 
+        #Globais utilizadas
         global serverAddress
 
-        #Cria o soquete e torna a conexao reciclavel
-        socket_sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket_sender.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        socket_sender.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-
-        #Obtem o endereco do servidor com base em seu nome
-        #SERVER = socket.gethostbyname(serverName)
-
-        #Serializa a requisicao utilizando json
-        serializedRequest = json.dumps(request)
+        global broker
+        port = 1883
+        topic = "request"
+        
+        mqttMessage = [self.clientIP, port, request]
 
         #print("--------------------------------------------")
-        #print(serverAddress)
-        #print(serializedRequest)
+        #print(clientAddressString)
+        #print(mqttMessage)
         #print("--------------------------------------------")
         
         try:
-            #Tenta fazer a conexao (endereco do servidor, porta 8001), envia a requisicao em formato "bytes", codec "UTF-8", pela conexao
-            socket_sender.connect((serverAddress, 8001))
-            socket_sender.send(bytes(serializedRequest, 'UTF-8'))
+            #Serializa a resposta utilizando json
+            serializedRequest = json.dumps(mqttMessage)
+
+            self.mqttClientSender.connect(broker, port)
+            self.mqttClientSender.loop_start()
+            self.mqttClientSender.publish(topic, serializedRequest)
+            self.mqttClientSender.loop_stop()
         except:
             pass
-
-        #Fecha a conexao (desfaz o soquete)
-        socket_sender.close()
 
     #Funcao para receber uma resposta de requisicao
     def listenToResponse(self):
         
-        broker = 'localhost'
-        port = 8002
-        topic = 'response'
-        timeout = 2
+        global serverAddress
+        global decodedBytes
+
+        global broker
+        port = 1883
+        topic = self.clientIP
+
+        add = ("", 0)
+        response = ""
 
         decodedBytes = ""
-        add = ("", 0)
-        content = ""
 
-        #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
-        def on_message(client, userdata, msg):
-            
-            #Decodifica a mensagem (a qual foi enviada em formato "bytes", codec "UTF-8")
-            decodedBytes = msg.payload.decode('UTF-8')
-            
-            print(decodedBytes)
-            
-            #Desconecta do broker
-            self.mqttClientReceiver.disconnect()
-            
-        self.mqttClientReceiver.on_message = on_message
-        
         #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
-        self.mqttClientReceiver.connect(broker=broker, port=port, keepalive=timeout)
+        self.mqttClientReceiver.connect(broker, port)
         self.mqttClientReceiver.subscribe(topic)
-        self.mqttClientReceiver.loop_forever()
-        
-        #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
-        if (len(decodedBytes) == 3):
+        self.mqttClientReceiver.loop_start()
 
-            #print("=============================================")
-            #print(add)
-            #print(msg)
-            #print(decodedBytes)
-            #print("=============================================")
-            
-            try:
-                #De-serializa a mensagem decodificada 
-                unserializedObj = json.loads(decodedBytes)
+        start_time = time.time()
+
+        while (((time.time() - start_time) < 2) and (decodedBytes == "")):
+
+            time.sleep(0.1)
+
+        self.mqttClientReceiver.loop_stop()
+
+        #print("=============================================")
+        #print(decodedBytes)
+        #print("=============================================")
+        
+        try:
+            #De-serializa a mensagem decodificada 
+            unserializedObj = json.loads(decodedBytes)
+
+            #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
+            if (len(unserializedObj) == 3):
 
                 #Separa a parte do endereco referente ao endereco IP
                 add = (unserializedObj[0], unserializedObj[1])
-                content = unserializedObj[2]
-            except:
-                pass
+                response = unserializedObj[2]
+        except Exception:
+            pass
         
         #Retorna o objeto da mensagem
-        return (add, content)
+        return (add, response)
 
+    
     #Funcao para registrar o veiculo
     def registerVehicle(self):
         
@@ -437,6 +445,8 @@ displayPurchaseID = "0"
 displayPurchaseTotal = "0"
 displayPurchasePrice = "0"
 displayPurchaseCharge = "0"
+
+broker = 'broker.emqx.io'
 
 #Cria um dicionario dos atributos do veiculo
 dataTable = {}

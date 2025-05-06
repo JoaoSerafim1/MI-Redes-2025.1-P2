@@ -1,8 +1,9 @@
 #Importa bibliotecas basicas do python 3
+import json
 import string
 import random
 import socket
-import json
+import uuid
 import datetime
 import time
 import threading
@@ -40,7 +41,21 @@ isExecuting = True
 #Variavel de contagem de fechamentos dos threads
 threadCount = 1
 
-mqttClientReceiver = mqtt_client.Client()
+serverIP = socket.gethostbyname(socket.gethostname())
+mqttClientSender = mqtt_client.Client(client_id=(serverIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+mqttClientReceiver = mqtt_client.Client(client_id=(serverIP + str(uuid.uuid4())), callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+broker = 'broker.emqx.io'
+
+decodedBytes = ""
+
+#Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
+def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
+    
+    global decodedBytes
+
+    decodedBytes = msg.payload.decode()
+    
+mqttClientReceiver.on_message = on_message
 
 #Funcao para obter um novo ID aleatorio
 def getRandomID():
@@ -91,55 +106,50 @@ def listenToRequest(timeout):
     
     global receiverLock
     global mqttClientReceiver
+    global decodedBytes
+    
+    global broker
+    port = 1883
+    topic = "request"
 
-    broker = 'localhost'
-    port = 8001
-    topic = 'request'
-
-    decodedBytes = ""
     add = ("", 0)
     content = ""
 
-    #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
-    def on_message(client, userdata, msg):
-        
-        #Decodifica a mensagem (a qual foi enviada em formato "bytes", codec "UTF-8")
-        decodedBytes = msg.payload.decode('UTF-8')
-        
-        print(decodedBytes)
-        
-        #Desconecta do broker
-        mqttClientReceiver.disconnect()
-        
-    mqttClientReceiver.on_message = on_message
-    
     receiverLock.acquire()
-    
+
+    decodedBytes = ""
+
     #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
-    mqttClientReceiver.connect(broker=broker, port=port, keepalive=timeout)
+    mqttClientReceiver.connect(broker, port)
     mqttClientReceiver.subscribe(topic)
-    mqttClientReceiver.loop_forever()
+    mqttClientReceiver.loop_start()
+
+    start_time = time.time()
+
+    while (((time.time() - start_time) < timeout) and (decodedBytes == "")):
+
+        time.sleep(0.1)
+
+    mqttClientReceiver.loop_stop()
 
     receiverLock.release()
-    
-    #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
-    if (len(decodedBytes) == 3):
 
-        #print("=============================================")
-        #print(add)
-        #print(msg)
-        #print(decodedBytes)
-        #print("=============================================")
-        
-        try:
-            #De-serializa a mensagem decodificada 
-            unserializedObj = json.loads(decodedBytes)
+    #print("=============================================")
+    #print(decodedBytes)
+    #print("=============================================")
+    
+    try:
+        #De-serializa a mensagem decodificada 
+        unserializedObj = json.loads(decodedBytes)
+
+        #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
+        if (len(unserializedObj) == 3):
 
             #Separa a parte do endereco referente ao endereco IP
             add = (unserializedObj[0], unserializedObj[1])
             content = unserializedObj[2]
-        except:
-            pass
+    except Exception:
+        pass
     
     #Retorna o objeto da mensagem
     return (add, content)
@@ -149,37 +159,37 @@ def sendResponse(clientAddress, response):
 
     #Globais utilizadas
     global senderLock
+    global mqttClientSender
+    global serverIP
 
     #Obtem a string do endereco do cliente
     clientAddressString, _ = clientAddress
 
-    #Serializa a requisicao utilizando json
-    serializedResponse = json.dumps(response)
-
-    #print("--------------------------------------------")
-    #print(clientAddress)
-    #print(clientAddressString)
-    #print(serializedResponse)
-    #print("--------------------------------------------")
-
-    senderLock.acquire()
-
-    #Cria o soquete e torna a conexao reciclavel
-    socket_sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket_sender.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    socket_sender.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    global broker
+    port = 1883
+    topic = clientAddressString
     
-    #Tenta fazer a conexao (endereco do cliente, porta 8002), envia a resposta em formato "bytes", codec "UTF-8", pela conexao
+    mqttMessage = [serverIP, port, response]
+
+    #print("--------------------------------------------")
+    #print(clientAddressString)
+    #print(mqttMessage)
+    #print("--------------------------------------------")
+    
     try:
-        socket_sender.connect((clientAddressString, 8002))
-        socket_sender.send(bytes(serializedResponse, 'UTF-8'))
+        #Serializa a resposta utilizando json
+        serializedRequest = json.dumps(mqttMessage)
+
+        senderLock.acquire()
+
+        mqttClientSender.connect(broker, port)
+        mqttClientSender.loop_start()
+        mqttClientSender.publish(topic, serializedRequest)
+        mqttClientSender.loop_stop()
+
+        senderLock.release()
     except:
         pass
-
-    #Fecha a conexao (desfaz o soquete)
-    socket_sender.close()
-
-    senderLock.release()
 
 
 #Funcao para fazer entrada de requisicao processada
