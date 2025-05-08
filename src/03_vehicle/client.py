@@ -25,7 +25,6 @@ class User():
         self.ID = ""
         self.battery_level = ""
         self.capacity = ""
-        self.vehicle = ""
         self.payment_history = {}
         self.clientIP = str(socket.gethostbyname(socket.gethostname()))
     
@@ -177,7 +176,7 @@ class User():
         localDataTable = readFile(["vehicledata", "vehicle_data.json"])
         
         #Confeccina o conteudo da requisicao e envia 1x
-        requestParameters = [localDataTable["coord_x"],localDataTable["coord_y"]]
+        requestParameters = [localDataTable["coord_x"],localDataTable["coord_y"], localDataTable["autonomy"], self.ID]
         requestContent = [requestID, 'nsr', requestParameters]
         self.sendRequest(requestContent)
         (add, response) = self.listenToResponse()
@@ -475,6 +474,7 @@ if (verifyFile(["vehicledata"], "vehicle_data.json") == False):
     dataTable["battery_level"] = "1.0"
     dataTable["coord_x"] = "1.0"
     dataTable["coord_y"] = "1.0"
+    dataTable["autonomy"] = "300.0"
 
     #E tambem cria o arquivo e preenche com as informacoes contidas no dicionario acima
     writeFile(["vehicledata", "vehicle_data.json"], dataTable)
