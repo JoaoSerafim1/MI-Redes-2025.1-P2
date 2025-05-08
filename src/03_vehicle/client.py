@@ -1,11 +1,7 @@
 #Importa bibliotecas basicas do python 3
 import json
 import socket
-import time
 import threading
-
-#Importa os componentes utilizados da biblioteca Paho MQTT
-from paho.mqtt import client as mqtt_client
 
 #Importa as bibliotecas customizadas da aplicacao
 from lib.db import *
@@ -14,6 +10,7 @@ from lib.pr import *
 
 #Importa customTkinter
 import customtkinter as ctk
+
 
 #Classe do usuario
 class User():
@@ -27,105 +24,85 @@ class User():
         self.capacity = ""
         self.vehicle = ""
         self.payment_history = {}
-        self.clientIP = str(socket.gethostbyname(socket.gethostname()))
     
     #Funcao para enviar uma requisicao ao servidor
     def sendRequest(self, request):
 
-        #Globais utilizadas
         global serverAddress
 
-        global broker
-        port = 1883
-        topic = "request"
-        
-        mqttMessage = [self.clientIP, port, request]
+        #Cria o soquete e torna a conexao reciclavel
+        socket_sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_sender.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        socket_sender.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
+        #Obtem o endereco do servidor com base em seu nome
+        #SERVER = socket.gethostbyname(serverName)
+
+        #Serializa a requisicao utilizando json
+        serializedRequest = json.dumps(request)
 
         #print("--------------------------------------------")
-        #print(clientAddressString)
-        #print(mqttMessage)
+        #print(serverAddress)
+        #print(serializedRequest)
         #print("--------------------------------------------")
         
         try:
-            #Serializa a resposta utilizando json
-            serializedRequest = json.dumps(mqttMessage)
-
-            mqttClientSender = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
-            mqttClientSender.connect(broker, port)
-            mqttClientSender.loop_start()
-            mqttClientSender.publish(topic, serializedRequest)
-            mqttClientSender.loop_stop()
+            #Tenta fazer a conexao (endereco do servidor, porta 8001), envia a requisicao em formato "bytes", codec "UTF-8", pela conexao
+            socket_sender.connect((serverAddress, 8001))
+            socket_sender.send(bytes(serializedRequest, 'UTF-8'))
         except:
             pass
+
+        #Fecha a conexao (desfaz o soquete)
+        socket_sender.close()
 
     #Funcao para receber uma resposta de requisicao
     def listenToResponse(self):
+
+        #Cria o soquete, torna a conexao reciclavel, estabelece um timeout (2 segundos), reserva a porta local 8002 para a conexao e liga o modo de escuta
+        socket_receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket_receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        socket_receiver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        socket_receiver.settimeout(2.0)
+        socket_receiver.bind((socket.gethostbyname(socket.gethostname()), 8002))
+        socket_receiver.listen(2)
+
+        #Valores iniciais da mensagem de resposta (mensagem vazia)
+        msg = bytes([])
+        add = ""
         
-        global serverAddress
-        global decodedBytes
-
-        global broker
-        port = 1883
-        topic = self.clientIP
-
-        add = ("", 0)
-        response = ""
-
-        decodedBytes = ""
-
-        mqttClientReceiver = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
-
-        #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
-        def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
-            
-            global decodedBytes
-
-            decodedBytes = msg.payload.decode()
-    
-        mqttClientReceiver.on_message = on_message
-
         try:
-            #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
-            mqttClientReceiver.connect(broker, port)
-            mqttClientReceiver.subscribe(topic)
-            mqttClientReceiver.loop_start()
-
-            start_time = time.time()
-
-            while (((time.time() - start_time) < 10) and (decodedBytes == "")):
-                pass
-
-            mqttClientReceiver.loop_stop()
-            mqttClientReceiver.unsubscribe(topic)
-            mqttClientReceiver.disconnect()
-
+            #Espera a mensagem pelo tempo estipulado no timeout
+            conn, add = socket_receiver.accept()
+            msg = conn.recv(1024)
         except:
             pass
-
-        byteCopy = ("" + decodedBytes)
-        decodedBytes = ""
-
-        #print("=============================================")
-        #print(decodedBytes)
-        #print("=============================================")
         
-        try:
+        #Fecha a conexao (desfaz o soquete)
+        socket_receiver.close()
+        
+        #Decodifica a mensagem (a qual foi enviada em formato "bytes", codec "UTF-8")
+        decodedBytes = msg.decode('UTF-8')
+        
+        #Se uma resposta valida foi recebida, a mensagem nao deve ser vazia
+        if (len(decodedBytes) > 0):
+
+            #print("=============================================")
+            #print(add)
+            #print(msg)
+            #print(decodedBytes)
+            #print("=============================================")
+
             #De-serializa a mensagem decodificada 
-            unserializedObj = json.loads(byteCopy)
+            unserializedObj = json.loads(decodedBytes)
 
-            #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
-            if (len(unserializedObj) == 3):
-
-                #Separa a parte do endereco referente ao endereco IP
-                add = (unserializedObj[0], unserializedObj[1])
-                response = unserializedObj[2]
-        except Exception:
-            pass
+            #Retorna o objeto da mensagem
+            return (add, unserializedObj)
         
-        #Retorna o objeto da mensagem
-        return (add, response)
-
+        #Retorna atributos de uma mensagem nao-recebida ou vazia
+        return (add, "")
     
+
     #Funcao para registrar o veiculo
     def registerVehicle(self):
         
@@ -459,8 +436,6 @@ dataTable = {}
 #Pergunta endereco do servidor
 serverAddress = input("Insira o endereço IP do servidor: ")
 
-broker = 'broker.emqx.io'
-
 #Verifica se o arquivo de texto "ID.txt" esta presente, e caso nao esteja...
 if (verifyFile(["vehicledata"], "ID.txt") == False):
     
@@ -482,21 +457,12 @@ if (verifyFile(["vehicledata"], "vehicle_data.json") == False):
 #Carrega as informacoes gravadas (ID)
 vehicle.ID = readFile(["vehicledata", "ID.txt"])
 
-
-#funçõo auxiliar para obter retorno de placeholders    
-def getServerPlaceholders():
-    server1 = originPlaceholder.get()
-    server2 = destinationPlaceholder.get()
-    tuple = (server1,server2)
-    return tuple
-
-#Frame1 = Janela principal
 frame = ctk.CTk()
 frame._set_appearance_mode('dark')
 frame.title('Cliente')
-frame.geometry('600x800')
+frame.geometry('400x600')
 
-userID = ctk.CTkLabel(frame,text=("ID do veiculo " + vehicle.ID + " "))
+userID = ctk.CTkLabel(frame,text=(" " + vehicle.ID + " "))
 userID.pack(pady=20)
 
 battery_info_text = ctk.StringVar()
@@ -528,78 +494,28 @@ next_purchase_result_text = ctk.StringVar()
 next_purchase_result = ctk.CTkLabel(frame,textvariable=next_purchase_result_text)
 next_purchase_result.pack(pady=30)
 
-originPlaceholder = ctk.CTkEntry(frame,placeholder_text='Digite o Servidor de origem')
-originPlaceholder.pack(pady=10)
-
-destinationPlaceholder = ctk.CTkEntry(frame,placeholder_text='Digite o Servidor de destino')
-destinationPlaceholder.pack(pady=10)
-
-validateServersButton = ctk.CTkButton(frame,text=' Selecionar servidores ',command=getServerPlaceholders) #precisa da referência da função correta
-validateServersButton.pack(pady=20)
-
 purchaseHistoryID = ctk.StringVar()
+purchaseHistoryIDLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryID)
+purchaseHistoryIDLabel.pack(pady=5)
+
 purchaseHistoryTotal = ctk.StringVar()
+purchaseHistoryTotalLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryTotal)
+purchaseHistoryTotalLabel.pack(pady=5)
+
 purchaseHistoryPrice = ctk.StringVar()
+purchaseHistoryPriceLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryPrice)
+purchaseHistoryPriceLabel.pack(pady=5)
+
 purchaseHistoryCharge = ctk.StringVar()
-#Frame2 = Gerenciador de Rotas
+purchaseHistoryChargeLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryCharge)
+purchaseHistoryChargeLabel.pack(pady=10)
 
-def openRechargeRouteManager():
-    frame2 = ctk.CTkToplevel(frame)
-    frame2.title('Gerenciar Recargas na Rotas')
-    frame2.geometry('600x800')
-    frame2.attributes('-topmost',True)
-    
-    #comandos a serem definidos
-    backButton = ctk.CTkButton(frame2,text=' < ')
-    backButton.pack(pady=5)
+bckButton = ctk.CTkButton(frame,text=' < ',command=lambda:vehicle.purchaseBackward())
+bckButton.pack(pady=5)
 
-    forwardButton = ctk.CTkButton(frame2,text=' > ')
-    forwardButton.pack(pady=20)
-    
-    def closeRRMWindow():
-        frame2.destroy()
-        frame2.update()
-    closeRRMButton = ctk.CTkButton(frame2,text=' Fechar Gerenciador de Rotas ',command=closeRRMWindow)
-    closeRRMButton.pack(pady=20)
-openRRMButton = ctk.CTkButton(frame,text=' Gerenciar Recarga na Rota ',command=openRechargeRouteManager)
-openRRMButton.pack(pady=10)
-#frame3 = histórico
-def openHistoryWindow():
-    frame3 = ctk.CTkToplevel(frame)
-    frame3.title('Histórico')
-    frame3.geometry('400x600')
-    frame3.attributes('-topmost',True)
+bckButton = ctk.CTkButton(frame,text=' > ',command=lambda:vehicle.purchaseForward())
+bckButton.pack(pady=20)
 
-    
-    purchaseHistoryIDLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryID)
-    purchaseHistoryIDLabel.pack(pady=5)
-
-    
-    purchaseHistoryTotalLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryTotal)
-    purchaseHistoryTotalLabel.pack(pady=5)
-
-    
-    purchaseHistoryPriceLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryPrice)
-    purchaseHistoryPriceLabel.pack(pady=5)
-
-    
-    purchaseHistoryChargeLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryCharge)
-    purchaseHistoryChargeLabel.pack(pady=10)
-
-    bckButton = ctk.CTkButton(frame3,text=' < ',command=lambda:vehicle.purchaseBackward())
-    bckButton.pack(pady=5)
-
-    bckButton = ctk.CTkButton(frame3,text=' > ',command=lambda:vehicle.purchaseForward())
-    bckButton.pack(pady=20)
-    
-    def closeHistoryWindow():
-        frame3.destroy()
-        frame3.update()
-    closeHistoryButton = ctk.CTkButton(frame3,text=' Fechar histórico ',command=closeHistoryWindow)
-    closeHistoryButton.pack(pady=20)
-    
-openHistoryButton = ctk.CTkButton(frame,text=' Abrir Histórico ',command=openHistoryWindow)
-openHistoryButton.pack(pady=20)
 newThread = threading.Thread(target=infoUpdate, args=())
 newThread.start()
 
