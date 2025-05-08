@@ -482,12 +482,21 @@ if (verifyFile(["vehicledata"], "vehicle_data.json") == False):
 #Carrega as informacoes gravadas (ID)
 vehicle.ID = readFile(["vehicledata", "ID.txt"])
 
+
+#funçõo auxiliar para obter retorno de placeholders    
+def getServerPlaceholders():
+    server1 = originPlaceholder.get()
+    server2 = destinationPlaceholder.get()
+    tuple = (server1,server2)
+    return tuple
+
+#Frame1 = Janela principal
 frame = ctk.CTk()
 frame._set_appearance_mode('dark')
 frame.title('Cliente')
-frame.geometry('400x600')
+frame.geometry('600x800')
 
-userID = ctk.CTkLabel(frame,text=(" " + vehicle.ID + " "))
+userID = ctk.CTkLabel(frame,text=("ID do veiculo " + vehicle.ID + " "))
 userID.pack(pady=20)
 
 battery_info_text = ctk.StringVar()
@@ -519,28 +528,78 @@ next_purchase_result_text = ctk.StringVar()
 next_purchase_result = ctk.CTkLabel(frame,textvariable=next_purchase_result_text)
 next_purchase_result.pack(pady=30)
 
+originPlaceholder = ctk.CTkEntry(frame,placeholder_text='Digite o Servidor de origem')
+originPlaceholder.pack(pady=10)
+
+destinationPlaceholder = ctk.CTkEntry(frame,placeholder_text='Digite o Servidor de destino')
+destinationPlaceholder.pack(pady=10)
+
+validateServersButton = ctk.CTkButton(frame,text=' Selecionar servidores ',command=getServerPlaceholders) #precisa da referência da função correta
+validateServersButton.pack(pady=20)
+
 purchaseHistoryID = ctk.StringVar()
-purchaseHistoryIDLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryID)
-purchaseHistoryIDLabel.pack(pady=5)
-
 purchaseHistoryTotal = ctk.StringVar()
-purchaseHistoryTotalLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryTotal)
-purchaseHistoryTotalLabel.pack(pady=5)
-
 purchaseHistoryPrice = ctk.StringVar()
-purchaseHistoryPriceLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryPrice)
-purchaseHistoryPriceLabel.pack(pady=5)
-
 purchaseHistoryCharge = ctk.StringVar()
-purchaseHistoryChargeLabel = ctk.CTkLabel(frame,textvariable=purchaseHistoryCharge)
-purchaseHistoryChargeLabel.pack(pady=10)
+#Frame2 = Gerenciador de Rotas
 
-bckButton = ctk.CTkButton(frame,text=' < ',command=lambda:vehicle.purchaseBackward())
-bckButton.pack(pady=5)
+def openRechargeRouteManager():
+    frame2 = ctk.CTkToplevel(frame)
+    frame2.title('Gerenciar Recargas na Rotas')
+    frame2.geometry('600x800')
+    frame2.attributes('-topmost',True)
+    
+    #comandos a serem definidos
+    backButton = ctk.CTkButton(frame2,text=' < ')
+    backButton.pack(pady=5)
 
-bckButton = ctk.CTkButton(frame,text=' > ',command=lambda:vehicle.purchaseForward())
-bckButton.pack(pady=20)
+    forwardButton = ctk.CTkButton(frame2,text=' > ')
+    forwardButton.pack(pady=20)
+    
+    def closeRRMWindow():
+        frame2.destroy()
+        frame2.update()
+    closeRRMButton = ctk.CTkButton(frame2,text=' Fechar Gerenciador de Rotas ',command=closeRRMWindow)
+    closeRRMButton.pack(pady=20)
+openRRMButton = ctk.CTkButton(frame,text=' Gerenciar Recarga na Rota ',command=openRechargeRouteManager)
+openRRMButton.pack(pady=10)
+#frame3 = histórico
+def openHistoryWindow():
+    frame3 = ctk.CTkToplevel(frame)
+    frame3.title('Histórico')
+    frame3.geometry('400x600')
+    frame3.attributes('-topmost',True)
 
+    
+    purchaseHistoryIDLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryID)
+    purchaseHistoryIDLabel.pack(pady=5)
+
+    
+    purchaseHistoryTotalLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryTotal)
+    purchaseHistoryTotalLabel.pack(pady=5)
+
+    
+    purchaseHistoryPriceLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryPrice)
+    purchaseHistoryPriceLabel.pack(pady=5)
+
+    
+    purchaseHistoryChargeLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryCharge)
+    purchaseHistoryChargeLabel.pack(pady=10)
+
+    bckButton = ctk.CTkButton(frame3,text=' < ',command=lambda:vehicle.purchaseBackward())
+    bckButton.pack(pady=5)
+
+    bckButton = ctk.CTkButton(frame3,text=' > ',command=lambda:vehicle.purchaseForward())
+    bckButton.pack(pady=20)
+    
+    def closeHistoryWindow():
+        frame3.destroy()
+        frame3.update()
+    closeHistoryButton = ctk.CTkButton(frame3,text=' Fechar histórico ',command=closeHistoryWindow)
+    closeHistoryButton.pack(pady=20)
+    
+openHistoryButton = ctk.CTkButton(frame,text=' Abrir Histórico ',command=openHistoryWindow)
+openHistoryButton.pack(pady=20)
 newThread = threading.Thread(target=infoUpdate, args=())
 newThread.start()
 
