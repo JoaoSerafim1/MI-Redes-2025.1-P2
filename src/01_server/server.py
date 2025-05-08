@@ -144,6 +144,12 @@ def listenToRequest(timeout):
             #Separa a parte do endereco referente ao endereco IP
             add = (unserializedObj[0], unserializedObj[1])
             content = unserializedObj[2]
+
+            #Separa a parte do endereco referente ao endereco IP
+            addressString, _ = add
+
+            #Registra no log
+            registerLogEntry(["logs", "received"], "RVMSG", "ADDRESS", addressString)
     except Exception:
         pass
     
