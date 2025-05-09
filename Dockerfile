@@ -24,6 +24,9 @@ RUN apt-get install tk -y && \
 # Install CustomTkinter
 RUN pip install customtkinter
 
+# Install requests
+RUN pip install requests
+
 COPY . .
 EXPOSE 8000
 EXPOSE 8001
