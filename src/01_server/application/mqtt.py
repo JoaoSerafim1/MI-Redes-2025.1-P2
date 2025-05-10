@@ -1,0 +1,117 @@
+###########################################################
+#
+# => MODULO DE COMUNICACAO VIA PROTOCOLO MQTT <=
+#
+###########################################################
+
+
+#Importa bibliotecas basicas do python 3
+import threading
+import time
+import json
+
+#Importa os componentes utilizados da biblioteca Paho MQTT
+from paho.mqtt import client as mqtt_client
+
+#Importa os modulos da aplicacao
+from application.util import *
+
+
+#Funcao para receber uma requisicao de um cliente (protocolo MQTT)
+def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, broker, port, timeout):
+    
+    topic = "request"
+
+    add = ("", 0)
+    content = ""
+
+    mqttClientReceiver = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+    
+    setattr(mqttClientReceiver, "decodedBytes", "")
+
+    #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
+    def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
+        setattr(client, "decodedBytes", msg.payload.decode())
+        
+        #print("=============================================")
+        #print(mqttClientReceiver.decodedBytes)
+        #print("=============================================")
+        
+    mqttClientReceiver.on_message = on_message
+
+    receiverLock.acquire()
+
+    try:
+        #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
+        mqttClientReceiver.connect(broker, port)
+        mqttClientReceiver.subscribe(topic)
+        mqttClientReceiver.loop_start()
+
+        start_time = time.time()
+
+        while (((time.time() - start_time) < timeout) and (mqttClientReceiver.decodedBytes == "")):
+            pass
+            
+        mqttClientReceiver.loop_stop()
+        mqttClientReceiver.unsubscribe(topic)
+        mqttClientReceiver.disconnect()
+
+    except:
+        pass
+
+    receiverLock.release()
+    
+    try:
+        #Caso a mensagem nao seja vazia
+        if (mqttClientReceiver.decodedBytes != ""):
+            
+            #De-serializa a mensagem decodificada 
+            unserializedObj = json.loads(mqttClientReceiver.decodedBytes)
+
+            #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
+            if (len(unserializedObj) == 3):
+
+                #Separa a parte do endereco referente ao endereco IP
+                add = (unserializedObj[0], unserializedObj[1])
+                content = unserializedObj[2]
+
+                #Separa a parte do endereco referente ao endereco IP
+                addressString, _ = add
+
+                #Registra no log
+                registerLogEntry(fileLock, ["application", "logs", "received"], "RVMSG", "ADDRESS", addressString)
+    except:
+        pass
+    
+    #Retorna o objeto da mensagem
+    return (add, content)
+
+#Funcao para enviar uma resposta de volta ao cliente (protocolo MQTT)
+def sendResponse(senderLock: threading.Lock, broker, port, serverIP, clientAddress, response):
+
+    #Obtem a string do endereco do cliente
+    clientAddressString, _ = clientAddress
+    topic = clientAddressString
+    
+    mqttMessage = [serverIP, port, response]
+
+    #print("--------------------------------------------")
+    #print(topic)
+    #print(mqttMessage)
+    #print("--------------------------------------------")
+    
+    try:
+        #Serializa a resposta utilizando json
+        serializedRequest = json.dumps(mqttMessage)
+
+        senderLock.acquire()
+
+        mqttClientSender = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+        mqttClientSender.connect(broker, port)
+        mqttClientSender.loop_start()
+        mqttClientSender.publish(topic, serializedRequest)
+        mqttClientSender.loop_stop()
+
+        senderLock.release()
+    except:
+        pass
