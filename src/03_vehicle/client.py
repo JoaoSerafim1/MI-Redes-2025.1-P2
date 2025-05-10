@@ -3,6 +3,7 @@ import json
 import socket
 import time
 import threading
+import sys
 
 #Importa os componentes utilizados da biblioteca Paho MQTT
 from paho.mqtt import client as mqtt_client
@@ -469,14 +470,59 @@ if (verifyFile(["vehicledata"], "ID.txt") == False):
 #Verifica se o arquivo de texto "vehicle_data.json" esta presente, e caso nao esteja...
 if (verifyFile(["vehicledata"], "vehicle_data.json") == False):
     
-    #Valores dos pares chave-valor sao sempre string para evitar problemas com json
-    dataTable["capacity"] = str(enterNumber("Capacidade atual de carga do veiculo, em KWh: ", "ENTRADA INVALIDA."))
-    dataTable["battery_level"] = "1.0"
-    dataTable["coord_x"] = "1.0"
-    dataTable["coord_y"] = "1.0"
-    dataTable["autonomy"] = "300.0"
+    try:
+        dataTable["capacity"] = str(argNumber(sys.argv[1]))
+    except:
+        dataTable["capacity"] = "100.0"
+
+    try:
+        dataTable["autonomy"] = str(argNumber(sys.argv[2]))
+    except:
+        dataTable["autonomy"] = "300.0"
+
+    try:
+        dataTable["battery_level"] = str(argNumber(sys.argv[3]))
+    except:
+        dataTable["battery_level"] = "0.5"
+
+    try:
+        dataTable["coord_x"] = str(argNumber(sys.argv[4]))
+    except:
+        dataTable["coord_x"] = "1.0"
+    
+    try:
+        dataTable["coord_y"] = str(argNumber(sys.argv[5]))
+    except:
+        dataTable["coord_y"] = "1.0"
 
     #E tambem cria o arquivo e preenche com as informacoes contidas no dicionario acima
+    writeFile(["vehicledata", "vehicle_data.json"], dataTable)
+
+#Caso esteja presente...
+else:
+
+    #Carrega as informacoes gravadas (vehicle_data)
+    dataTable = readFile(["vehicledata", "vehicle_data.json"])
+
+    try:
+        newBatteryLevel = str(argNumber(sys.argv[1]))
+        dataTable["battery_level"] = newBatteryLevel
+    except:
+        pass
+
+    try:
+        newCoordX = str(argNumber(sys.argv[2]))
+        dataTable["coord_x"] = newCoordX
+    except:
+        pass
+    
+    try:
+        newCoordY = str(argNumber(sys.argv[3]))
+        dataTable["coord_y"] = newCoordY
+    except:
+        pass
+
+    #Gravas as informacoes atualizadas passadas por parametros
     writeFile(["vehicledata", "vehicle_data.json"], dataTable)
 
 #Carrega as informacoes gravadas (ID)
