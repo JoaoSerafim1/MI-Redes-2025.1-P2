@@ -82,7 +82,7 @@ def respondWithRoute(fileLock: threading.Lock, senderLock, broker, port, serverI
     vehicleAddressString, _ = vehicleAddress
 
     #Registra no log
-    registerLogEntry(["application", "logs", "performed"], "RTDETAILS", "V_ADD", vehicleAddressString)
+    registerLogEntry(["logs", "performed"], "RTDETAILS", "V_ADD", vehicleAddressString)
 
     #Responde o status da requisicao para o cliente
     sendResponse(senderLock, broker, port, serverIP, vehicleAddress, [serverRouteIndex, routeNodeNameList])
@@ -101,14 +101,14 @@ def doReservation(fileLock, serverAddress, stationID, vehicleID, reservationTime
     zeroBookingConflicts = False
 
     fileLock.acquire()
-    stationVerify = verifyFile(["application", "clientdata", "clients", "stations"], stationFileName)
+    stationVerify = verifyFile(["clientdata", "clients", "stations"], stationFileName)
     fileLock.release()
 
     if ((stationVerify == True) and (len(stationID) == 24)):
         
         #Zona de exclusao mutua referente a manipulacao de arquivos
         fileLock.acquire()
-        vehicleVerify = verifyFile(["application", "clientdata", "clients", "vehicles"], vehicleFileName)
+        vehicleVerify = verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName)
         fileLock.release()
 
     #Obtem o tempo atual, para verificar se o agendamento sequer e valido
@@ -122,7 +122,7 @@ def doReservation(fileLock, serverAddress, stationID, vehicleID, reservationTime
         fileLock.acquire()
 
         #Carrega o dicionario de informacoes da estacao a ser agendada
-        stationInfo = readFile(["application", "clientdata", "clients", "stations", stationFileName])
+        stationInfo = readFile(["clientdata", "clients", "stations", stationFileName])
 
         for actualBookedVehicleID in stationInfo["vehicle_bookings"]:
             
@@ -139,7 +139,7 @@ def doReservation(fileLock, serverAddress, stationID, vehicleID, reservationTime
 
             stationInfo["vehicle_bookings"][vehicleID] = reservationTime
 
-            writeFile(["application", "clientdata", "clients", "stations", stationFileName], stationInfo)
+            writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
 
         fileLock.release()
 
@@ -154,7 +154,7 @@ def undoReservation(fileLock, serverAddress, vehicleID):
     fileLock.acquire()
 
     #Adquire uma lista com o nome dos arquivos de todas as estacoes
-    stationList = listFiles(["application", "clientdata", "clients", "stations"])
+    stationList = listFiles(["clientdata", "clients", "stations"])
 
     #Loop que percorre a lista de estacoes de carga
     for stationIndex in range(0, len(stationList)):
@@ -163,14 +163,14 @@ def undoReservation(fileLock, serverAddress, vehicleID):
         actualStationFileName = stationList[stationIndex]
 
         #Carrega as informacoes da estacao atual
-        actualStationTable = readFile(["application", "clientdata", "clients", "stations", actualStationFileName])
+        actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
 
         try:
             #Tenta remover a entrada com o ID do veiculo solicitante da lista de agendamento, pois o mesmo acabou de iniciar o processo de recarga
             del actualStationTable["vehicle_bookings"][vehicleID]
 
             #Grava o resultado da acao
-            writeFile(["application", "clientdata", "clients", "stations", actualStationFileName], actualStationTable)
+            writeFile(["clientdata", "clients", "stations", actualStationFileName], actualStationTable)
         except:
             pass
 

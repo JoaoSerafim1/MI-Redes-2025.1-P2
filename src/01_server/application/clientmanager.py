@@ -14,7 +14,7 @@ from application.mqtt import *
 
 
 #Funcao para registrar uma estacao de recarga
-def registerChargeStation(fileLock: threading.Lock, randomIDLock: threading.Lock, randomID, senderLock: threading.Lock, broker, port, serverIP, requestID, stationAddress, requestParameters):
+def registerChargeStation(fileLock: threading.Lock, randomID, senderLock: threading.Lock, broker, port, serverIP, requestID, stationAddress, requestParameters):
 
     #Caso os parametros da requisicao sejam do tamanho adequado...
     if (len(requestParameters) >= 4):
@@ -23,8 +23,6 @@ def registerChargeStation(fileLock: threading.Lock, randomIDLock: threading.Lock
         stationID = requestParameters[0]
 
         requestSuccess = False
-
-        randomIDLock.acquire()
 
         #Caso o ID da estacao fornecido seja igual ao ID aleatorio atual esperado
         if (stationID == randomID):
@@ -44,22 +42,20 @@ def registerChargeStation(fileLock: threading.Lock, randomIDLock: threading.Lock
 
             #Grava as informacoes em arquivo de texto
             fileLock.acquire()
-            writeFile(["application", "clientdata", "clients", "stations", fileName], stationInfo)
+            writeFile(["clientdata", "clients", "stations", fileName], stationInfo)
             fileLock.release()
             
             #Grava o status da requisicao (mesmo conteudo da mensagem enviada como resposta)
             registerRequestResult(fileLock, stationAddress, requestID, 'OK')
 
             #Registra no log
-            registerLogEntry(fileLock, ["application", "logs", "performed"], "RGTSTATION", "S_ID", stationID)
+            registerLogEntry(fileLock, ["logs", "performed"], "RGTSTATION", "S_ID", stationID)
 
             #Gera um novo ID aleatorio e exibe mensagem para conhecimento do mesmo
             randomID = getRandomID(fileLock, randomID)
             print("ID para o proximo cadastro de estacao de carga: " + randomID)
 
             requestSuccess = True
-
-        randomIDLock.release()
         
         if(requestSuccess ==True):
 
@@ -105,7 +101,7 @@ def registerVehicle(fileLock: threading.Lock, randomIDLock: threading.Lock, rand
 
     #Cria um novo arquivo para o veiculo
     fileLock.acquire()
-    writeFile(["application", "clientdata", "clients", "vehicles", vehicleFileName], dataTable)
+    writeFile(["clientdata", "clients", "vehicles", vehicleFileName], dataTable)
     fileLock.release()
 
     randomIDLock.release()
@@ -114,7 +110,7 @@ def registerVehicle(fileLock: threading.Lock, randomIDLock: threading.Lock, rand
     registerRequestResult(fileLock, vehicleAddress, requestID, vehicleRandomID)
 
     #Registra no log
-    registerLogEntry(fileLock, ["application", "logs", "performed"], "RGTVEHICLE", "V_ID", vehicleRandomID)
+    registerLogEntry(fileLock, ["logs", "performed"], "RGTVEHICLE", "V_ID", vehicleRandomID)
 
     #Responde o status da requisicao para o cliente
     sendResponse(senderLock, broker, port, serverIP, vehicleAddress, vehicleRandomID)
@@ -133,7 +129,7 @@ def getBookedVehicle(fileLock: threading.Lock, senderLock: threading.Lock, broke
 
         #Verifica se existe a estacao de carga com o ID fornecido (por meio de verificacao do arquivo de nome exato)
         fileLock.acquire()
-        stationVerify = verifyFile(["application", "clientdata", "clients", "stations"], fileName)
+        stationVerify = verifyFile(["clientdata", "clients", "stations"], fileName)
         fileLock.release()
 
         #Caso o ID da estacao seja valido
@@ -145,13 +141,13 @@ def getBookedVehicle(fileLock: threading.Lock, senderLock: threading.Lock, broke
             fileLock.acquire()
 
             #Recupera informacoes da estacao de carga
-            stationInfo = readFile(["application", "clientdata", "clients", "stations", fileName])
+            stationInfo = readFile(["clientdata", "clients", "stations", fileName])
             
             #Insere a informacao de ultimo momento online
             stationInfo["last_online"] = lastOnline
             
             #Grava a informacao atualizada (controle de estacoes online)
-            writeFile(["application", "clientdata", "clients", "stations", fileName], stationInfo)
+            writeFile(["clientdata", "clients", "stations", fileName], stationInfo)
             
             fileLock.release()
 
@@ -163,7 +159,7 @@ def getBookedVehicle(fileLock: threading.Lock, senderLock: threading.Lock, broke
             registerRequestResult(fileLock, stationAddress, requestID, [bookedVehicle, remainingCharge])
 
             #Registra no log
-            registerLogEntry(fileLock, ["application", "logs", "performed"], "GETBOOKED", "S_ID", stationID)
+            registerLogEntry(fileLock, ["logs", "performed"], "GETBOOKED", "S_ID", stationID)
             
             #Responde o status da requisicao para o cliente
             sendResponse(senderLock, broker, port, serverIP, stationAddress, [bookedVehicle, remainingCharge])
@@ -194,7 +190,7 @@ def respondWithPurchase(fileLock: threading.Lock, senderLock: threading.Lock, br
 
         #Verifica se existe veiculo com o ID especificado
         fileLock.acquire()
-        verifyVehicle = verifyFile(["application", "clientdata", "clients", "vehicles"], vehicleFileName)
+        verifyVehicle = verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName)
         fileLock.release()
 
         #Se existe veiculo valido no ID e o indice e numerico
@@ -202,7 +198,7 @@ def respondWithPurchase(fileLock: threading.Lock, senderLock: threading.Lock, br
             
             #Le o arquivo do veiculo com o ID especificado
             fileLock.acquire()
-            vehicleInfo = readFile(["application", "clientdata", "clients", "vehicles", vehicleFileName])
+            vehicleInfo = readFile(["clientdata", "clients", "vehicles", vehicleFileName])
             fileLock.release()
 
             #Lista as compras feitas pelo veiculo
@@ -217,7 +213,7 @@ def respondWithPurchase(fileLock: threading.Lock, senderLock: threading.Lock, br
 
                 #Carrega o arquivo de compra
                 fileLock.acquire()
-                purchaseInfo = readFile(["application", "clientdata", "purchases", purchaseFileName])
+                purchaseInfo = readFile(["clientdata", "purchases", purchaseFileName])
                 fileLock.release()
                 
                 #Atualiza informacoes da resposta de acordo com o que foi carregado
@@ -233,7 +229,7 @@ def respondWithPurchase(fileLock: threading.Lock, senderLock: threading.Lock, br
     vehicleAddressString, _ = vehicleAddress
 
     #Registra no log
-    registerLogEntry(fileLock, ["application", "logs", "performed"], "PCHDETAILS", "V_ADD", vehicleAddressString)
+    registerLogEntry(fileLock, ["logs", "performed"], "PCHDETAILS", "V_ADD", vehicleAddressString)
 
     #Responde o status da requisicao para o cliente
     sendResponse(senderLock, broker, port, serverIP, vehicleAddress, [purchaseIDToReturn, totalToReturn, unitaryPriceToReturn, amountToReturn])

@@ -103,14 +103,14 @@ def clientRequestCatcher():
                 
                 #Verifica se ja existe um arquivo de requisicao para o endereco
                 fileLock.acquire()
-                requestVerify = verifyFile(["application", "clientdata", "requests"], requestFileName)
+                requestVerify = verifyFile(["clientdata", "requests"], requestFileName)
                 fileLock.release()
 
                 if(requestVerify == True):
             
                     #Recupera informacoes da ultima requisicao
                     fileLock.acquire()
-                    requestTable = readFile(["application", "clientdata", "requests", requestFileName])
+                    requestTable = readFile(["clientdata", "requests", requestFileName])
                     fileLock.release()
                     storedRequestID = requestTable["ID"]
                     requestResult = requestTable["result"]
@@ -127,8 +127,12 @@ def clientRequestCatcher():
                 #Executa diferente requisicoes dependendo do nome da requisicao (acronimo)
                 if (requestName == 'rcs'):
                     
-                    randomID = registerChargeStation(fileLock, randomIDLock, randomID, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
-                
+                    randomIDLock.acquire()
+
+                    randomID = registerChargeStation(fileLock, randomID, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
+
+                    randomIDLock.release()
+
                 elif (requestName == 'rve'):
 
                     registerVehicle(fileLock, randomIDLock, randomID, senderLock, broker, port, serverIP, requestID, clientAddress)

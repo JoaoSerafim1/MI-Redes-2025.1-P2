@@ -37,7 +37,7 @@ def getRandomID(fileLock: threading.Lock, randomID):
 
         #Verifica se o ID aleatorio ja tem registro em estacoes (raro, mas pode acontecer)
         fileLock.acquire()
-        stationVerify = verifyFile(["application", "clientdata", "clients", "stations"], completeFileName)
+        stationVerify = verifyFile(["clientdata", "clients", "stations"], completeFileName)
         fileLock.release()
         
         #Se for o caso
@@ -45,7 +45,7 @@ def getRandomID(fileLock: threading.Lock, randomID):
             
             #Faz o mesmo processo para veiculos
             fileLock.acquire()
-            vehicleVerify = verifyFile(["application", "clientdata", "clients", "vehicles"], completeFileName)
+            vehicleVerify = verifyFile(["clientdata", "clients", "vehicles"], completeFileName)
             fileLock.release()
         
         #Caso o arquivo esperado nao exista
@@ -70,7 +70,7 @@ def registerRequestResult(fileLock: threading.Lock, clientAddress, requestID, re
     
     #Cria uma entrada referente a requisicao e ao resultado obtido
     fileLock.acquire()
-    writeFile(["application", "clientdata", "requests", requestFileName], requestTable)
+    writeFile(["clientdata", "requests", requestFileName], requestTable)
     fileLock.release()
 
 #Funcao para registrar uma entrada no log

@@ -79,7 +79,7 @@ def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, brok
                 addressString, _ = add
 
                 #Registra no log
-                registerLogEntry(fileLock, ["application", "logs", "received"], "RVMSG", "ADDRESS", addressString)
+                registerLogEntry(fileLock, ["logs", "received"], "RVMSG", "ADDRESS", addressString)
     except:
         pass
     

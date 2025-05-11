@@ -28,7 +28,7 @@ def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threadi
     fileLock.acquire()
 
     #Adquire uma lista com o nome dos arquivos de todas as estacoes
-    stationList = listFiles(["application", "clientdata", "clients", "stations"])
+    stationList = listFiles(["clientdata", "clients", "stations"])
 
     #Loop que percorre a lista de estacoes de carga
     for stationIndex in range(0, len(stationList)):
@@ -46,7 +46,7 @@ def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threadi
                 actualID += actualStationFileName[IDIndex]
 
             #Carrega as informacoes da estacao atual
-            actualStationTable = readFile(["application", "clientdata", "clients", "stations", actualStationFileName])
+            actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
 
             try:
                 #Calcula a distancia
@@ -103,7 +103,7 @@ def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threadi
     vehicleAddressString, _ = vehicleAddress
 
     #Registra no log
-    registerLogEntry(fileLock, ["application", "logs", "performed"], "GETDISTANCE", "V_ADD", vehicleAddressString)
+    registerLogEntry(fileLock, ["logs", "performed"], "GETDISTANCE", "V_ADD", vehicleAddressString)
 
     #Responde o status da requisicao para o cliente
     sendResponse(senderLock, broker, port, serverIP, vehicleAddress, [IDToReturn, str(distanceToReturn), unitaryPriceToReturn])
@@ -129,14 +129,14 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
         vehicleVerify = False
 
         fileLock.acquire()
-        stationVerify = verifyFile(["application", "clientdata", "clients", "stations"], stationFileName)
+        stationVerify = verifyFile(["clientdata", "clients", "stations"], stationFileName)
         fileLock.release()
         
         if ((stationVerify == True) and (len(stationID) == 24)):
             
             #Zona de exclusao mutua referente a manipulacao de arquivos
             fileLock.acquire()
-            vehicleVerify = verifyFile(["application", "clientdata", "clients", "vehicles"], vehicleFileName)
+            vehicleVerify = verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName)
             fileLock.release()
 
         #Caso o ID do veiculo/estacao fornecidos sejam validos e a compra seja confirmada
@@ -151,7 +151,7 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
             actualTime = int(time.time())
 
             #Carrega o dicionario de informacoes da estacao a ser agendada
-            stationInfo = readFile(["application", "clientdata", "clients", "stations", stationFileName])
+            stationInfo = readFile(["clientdata", "clients", "stations", stationFileName])
 
             for actualBookedVehicleID in stationInfo["vehicle_bookings"]:
                 
@@ -180,7 +180,7 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
                 purchaseTable["charge_amount"] = chargeAmount
 
                 #Carrega o dicionario de informacoes do veiculo, Adiciona a compra a lista de compras do veiculo (cliente) e grava o resultado
-                vehicleInfo = readFile(["application", "clientdata", "clients", "vehicles", vehicleFileName])
+                vehicleInfo = readFile(["clientdata", "clients", "vehicles", vehicleFileName])
                 vehicleInfo["purchases"].append(purchaseID)
 
                 #Modifica o veiculo atual na estacao de carga e grava o resultado
@@ -188,12 +188,12 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
                 stationInfo["remaining_charge"] = chargeAmount
 
                 #Grava o resultado das acoes
-                writeFile(["application", "clientdata", "purchases", purchaseFileName], purchaseTable)
-                writeFile(["application", "clientdata", "clients", "vehicles", vehicleFileName], vehicleInfo)
-                writeFile(["application", "clientdata", "clients", "stations", stationFileName], stationInfo)
+                writeFile(["clientdata", "purchases", purchaseFileName], purchaseTable)
+                writeFile(["clientdata", "clients", "vehicles", vehicleFileName], vehicleInfo)
+                writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
 
                 #Adquire uma lista com o nome dos arquivos de todas as estacoes
-                stationList = listFiles(["application", "clientdata", "clients", "stations"])
+                stationList = listFiles(["clientdata", "clients", "stations"])
 
                 #Loop que percorre a lista de estacoes de carga
                 for stationIndex in range(0, len(stationList)):
@@ -202,14 +202,14 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
                     actualStationFileName = stationList[stationIndex]
 
                     #Carrega as informacoes da estacao atual
-                    actualStationTable = readFile(["application", "clientdata", "clients", "stations", actualStationFileName])
+                    actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
 
                     try:
                         #Tenta remover a entrada com o ID do veiculo solicitante da lista de agendamento, pois o mesmo acabou de iniciar o processo de recarga
                         del actualStationTable["vehicle_bookings"][vehicleID]
 
                         #Grava o resultado da acao
-                        writeFile(["application", "clientdata", "clients", "stations", actualStationFileName], actualStationTable)
+                        writeFile(["clientdata", "clients", "stations", actualStationFileName], actualStationTable)
                     except:
                         pass
 
@@ -225,7 +225,7 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
                 registerRequestResult(fileLock, vehicleAddress, requestID, 'OK')
 
                 #Registra no log
-                registerLogEntry(fileLock, ["application", "logs", "performed"], "PHCCHARGE", "P_ID", purchaseID)
+                registerLogEntry(fileLock, ["logs", "performed"], "PHCCHARGE", "P_ID", purchaseID)
                 
                 #Envia mensagem de resposta ao veiculo
                 sendResponse(senderLock, broker, port, serverIP, vehicleAddress, 'OK')
@@ -272,13 +272,13 @@ def freeChargingStation(fileLock: threading.Lock, senderLock: threading.Lock, br
         fileLock.acquire()
 
         #Verifica se existe estacao com o ID fornecido
-        stationVerify = verifyFile(["application", "clientdata", "clients", "stations"], fileName)
+        stationVerify = verifyFile(["clientdata", "clients", "stations"], fileName)
 
         #Caso o ID da estacao seja valido
         if((stationVerify == True) and (len(stationID) == 24)):
             
             #Recupera informacoes da estacao de carga
-            stationInfo = readFile(["application", "clientdata", "clients", "stations", fileName])
+            stationInfo = readFile(["clientdata", "clients", "stations", fileName])
 
             #Insere as novas informacoes
             stationInfo["last_online"] = str(time.time())
@@ -286,7 +286,7 @@ def freeChargingStation(fileLock: threading.Lock, senderLock: threading.Lock, br
             stationInfo["remaining_charge"] = "0"
 
             #Grava as informacoes em arquivo de texto
-            writeFile(["application", "clientdata", "clients", "stations", fileName], stationInfo)
+            writeFile(["clientdata", "clients", "stations", fileName], stationInfo)
 
         fileLock.release()
 
@@ -296,7 +296,7 @@ def freeChargingStation(fileLock: threading.Lock, senderLock: threading.Lock, br
             registerRequestResult(fileLock, stationAddress, requestID, 'OK')
 
             #Registra no log
-            registerLogEntry(fileLock, ["application", "logs", "performed"], "FREESPOT", "S_ID", stationID)
+            registerLogEntry(fileLock, ["logs", "performed"], "FREESPOT", "S_ID", stationID)
             
             #Responde o status da requisicao para o cliente
             sendResponse(senderLock, broker, port, serverIP, stationAddress, 'OK')
