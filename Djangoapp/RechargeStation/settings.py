@@ -56,6 +56,8 @@ INTERNAL_IPS = [
     # ...
 ]
 
+ALLOWED_HOSTS = ['127.0.0.1','127.0.0.2','127.0.0.3','localhost','api_container']
+
 ROOT_URLCONF = 'RechargeStation.urls'
 
 TEMPLATES = [
