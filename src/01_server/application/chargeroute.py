@@ -89,7 +89,7 @@ def respondWithRoute(fileLock: threading.Lock, senderLock, broker, port, serverI
 
 
 #Funcao para reservar um ponto de recarga
-def doReservation(fileLock, serverAddress, stationID, vehicleID, reservationTime):
+def doReservation(fileLock, serverAddress, stationID, vehicleID, reservationTime, timeWindow):
 
     #Nome do arquivo do veiculo de carga a ser analizado
     vehicleFileName = (vehicleID + ".json")
@@ -130,7 +130,7 @@ def doReservation(fileLock, serverAddress, stationID, vehicleID, reservationTime
             bookedTime = stationInfo["vehicle_bookings"][actualBookedVehicleID]
 
             #Se a entrada na agenda nao for do veiculo solicitante e a janela de tempo do agendamento (2 horas antes e depois do horario exato marcado) contemplar o tempo atual, nao podera haver recarga
-            if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (reservationTime > (bookedTime - 7200))) and (reservationTime < (bookedTime + 7200))):
+            if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (reservationTime > (bookedTime - timeWindow))) and (reservationTime < (bookedTime + timeWindow))):
                 
                 zeroBookingConflicts = False
 

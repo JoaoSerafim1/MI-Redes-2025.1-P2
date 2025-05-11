@@ -28,6 +28,9 @@ serverIP = socket.gethostbyname(socket.gethostname())
 broker = 'broker.emqx.io'
 port = 1883
 
+#Tempo em segundos antes e depois do horario exato marcado durante o qual um posto de recarga sera considerado como "ocupado"
+timeWindow = 7200
+
 ####################################################################################
 
 
@@ -69,6 +72,8 @@ def clientRequestCatcher():
     global broker
     global port
     global serverIP
+
+    global timeWindow
 
     #Loop da thread
     while (isExecuting == True):
@@ -143,11 +148,11 @@ def clientRequestCatcher():
                 
                 elif (requestName == 'nsr'):
 
-                    getNearestAvailableStationInfo(fileLock, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
+                    getNearestAvailableStationInfo(fileLock, senderLock, broker, port, serverIP, timeWindow, requestID, clientAddress, requestParameters)
 
                 elif (requestName == 'bcs'):
                     
-                    attemptCharge(fileLock, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
+                    attemptCharge(fileLock, senderLock, broker, port, serverIP, timeWindow, requestID, clientAddress, requestParameters)
                     
                 elif (requestName == 'fcs'):
 

@@ -18,7 +18,7 @@ from application.mqtt import *
 
 
 #Funcao para retornar a distancia ate o posto de recarga disponivel mais proximo e seu ID
-def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverIP, requestID, vehicleAddress, requestParameters):
+def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverIP, timeWindow, requestID, vehicleAddress, requestParameters):
 
     #Informacoes iniciais da mensagem de resposta
     IDToReturn = "0"
@@ -72,7 +72,7 @@ def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threadi
                     bookedTime = actualStationTable["vehicle_bookings"][actualBookedVehicleID]
 
                     #Se a entrada na agenda nao for do veiculo solicitante e a janela de tempo do agendamento (2 horas antes e depois do horario exato marcado) contemplar o tempo atual, nao podera haver recarga
-                    if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (actualTime > (bookedTime - 7200))) and (actualTime < (bookedTime + 7200))):
+                    if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (actualTime > (bookedTime - timeWindow))) and (actualTime < (bookedTime + timeWindow))):
                         
                         zeroBookingConflicts = False
                 
@@ -109,7 +109,7 @@ def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threadi
     sendResponse(senderLock, broker, port, serverIP, vehicleAddress, [IDToReturn, str(distanceToReturn), unitaryPriceToReturn])
 
 #Funcao para tentar realizar (reserva de) abastecimento
-def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverIP, requestID, vehicleAddress, requestParameters):
+def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverIP, timeWindow, requestID, vehicleAddress, requestParameters):
 
     #Caso os parametros da requisicao sejam do tamanho adequado...
     if (len(requestParameters) >= 4):
@@ -159,7 +159,7 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
                 bookedTime = stationInfo["vehicle_bookings"][actualBookedVehicleID]
 
                 #Se a entrada na agenda nao for do veiculo solicitante e a janela de tempo do agendamento (2 horas antes e depois do horario exato marcado) contemplar o tempo atual, nao podera haver recarga
-                if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (actualTime > (bookedTime - 7200))) and (actualTime < (bookedTime + 7200))):
+                if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (actualTime > (bookedTime - timeWindow))) and (actualTime < (bookedTime + timeWindow))):
                     
                     zeroBookingConflicts = False
 
