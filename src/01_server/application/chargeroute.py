@@ -91,12 +91,12 @@ def respondWithRoute(fileLock: threading.Lock, senderLock: threading.Lock, broke
     sendResponse(senderLock, broker, port, serverAddress, vehicleAddress, [serverRouteIndex, routeNodeNameList])
 
 #Funcao para reservar uma rota
-def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverAddress, serverRequestID, vehicleRequestID, vehicleAddress, requestParameters):
+def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverAddress, vehicleRequestID, vehicleAddress, requestParameters):
     
     #Informacoes iniciais da mensagem de resposta
     response = "ERR"
 
-    #Se estiver no formato adequado
+    #Se estiver no formato adequado em qualquer momento da execucao
     try:
 
         #Parametros da operacao, de acordo com a informacao recebida
@@ -115,13 +115,13 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
         chosenRoute = routeInfo[routeIndex]
 
         nodeIndex = 0
-        isForward = True
+        noNegativeResponse = True
 
         #Loop que garante que os nos serao percorridos em um dos dois sentidos (ate o final caso nao acontecam problemas ou voltando ate o inicio caso acontecam problemas)
-        while ((nodeIndex > 0) or (isForward == True) and (nodeIndex < len(chosenRoute))):
+        while ((nodeIndex >= 0) and (nodeIndex < len(chosenRoute))):
             
-            #Se estiver no sentido normal, significa que ainda nao foram encontrados problemas na reserva, portanto deve ser continuado o processo de reservar pontos
-            if (isForward == True):
+            #Se nao foram encontrados problemas na reserva, deve ser continuado o processo de reservar pontos
+            if (noNegativeResponse == True):
                 
                 #Informacoes do no atual
                 chosenRouteNodeAddress, _ = chosenRoute[nodeIndex]
@@ -131,27 +131,28 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 serverRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
                 
                 #Manda a mensagem solicitando reserva de um ponto naquele servidor
-                sendServerMessage(chosenRouteNodeAddress, [serverRequestID, "rrn", serverRequestParameters])
+                sendServerMessage(chosenRouteNodeAddress, ["drr", serverRequestParameters])
 
-                add, content = listenToServerMessage(fileLock, 10)
+                content = listenToServerMessage(fileLock, 10)
 
                 #Se a resposta e positiva, podemos ir usar as proximas coordenadas e ir ao proximo elemento
                 if (len(content) >= 2):
                     
                     coordX = str(content[0])
                     coordY = str(content[1])
-
+                    
+                    #Aumenta o indice do no
                     nodeIndex += 1
                 
                 #Mas se nao for, revertemos o sentido de percorrer a lista
                 else:
 
-                    isForward = False
+                    noNegativeResponse = False
 
-            #Mas se estiver no sentido reverso, deve ser desfeita a reserva do no anterior (se o indice to atual for maior que 0)
-            elif ((isForward == False) and (nodeIndex > 0)):
+            #Mas se foram encontrados problemas, deve ser desfeita a reserva do no anterior (se o indice to atual for maior ou igual a 0)
+            elif ((noNegativeResponse == False) and (nodeIndex > 0)):
                 
-                #No anterior
+                #Diminui o indice do no
                 nodeIndex -= 1
 
                 #Informacoes do no atual
@@ -161,11 +162,11 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 serverRequestParameters = [vehicleID]
                 
                 #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                sendServerMessage(chosenRouteNodeAddress, [serverRequestID, "urn", serverRequestParameters])
+                sendServerMessage(chosenRouteNodeAddress, ["urr", serverRequestParameters])
 
             #Finalizado o loop, verifica o status da direcao novamente
             #Se ainda estiver normal, a operacao foi bem-sucedida, o que quer dizer que a rota atual do veiculo sera limpa, sera e registrada a nova
-            if (isForward == True):
+            if (noNegativeResponse == True):
                 
                 response = "OK"
 
@@ -199,7 +200,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                     serverRequestParameters = [vehicleID]
                     
                     #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                    sendServerMessage(lastRouteNodeAddress, [serverRequestID, "urn", serverRequestParameters])
+                    sendServerMessage(lastRouteNodeAddress, ["urr", serverRequestParameters])
 
     except:
         pass
