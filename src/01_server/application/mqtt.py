@@ -100,18 +100,24 @@ def sendResponse(senderLock: threading.Lock, broker, port, serverIP, clientAddre
     #print(mqttMessage)
     #print("--------------------------------------------")
     
+    senderLock.acquire()
+
     try:
         #Serializa a resposta utilizando json
         serializedRequest = json.dumps(mqttMessage)
 
-        senderLock.acquire()
-
         mqttClientSender = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
+        
         mqttClientSender.connect(broker, port)
         mqttClientSender.loop_start()
-        mqttClientSender.publish(topic, serializedRequest)
-        mqttClientSender.loop_stop()
 
-        senderLock.release()
+        mqttClientSender.publish(topic, serializedRequest)
+        
+        mqttClientSender.loop_stop()
+        mqttClientSender.disconnect()
+
+        
     except:
         pass
+
+    senderLock.release()
