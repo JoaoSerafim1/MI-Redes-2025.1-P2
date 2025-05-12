@@ -38,8 +38,8 @@ timeWindow = 7200
 fileLock = threading.Lock()
 
 #Locks para uso dos sockets
-senderLock = threading.Lock()
-receiverLock = threading.Lock()
+senderSocketLock = threading.Lock()
+receiverSocketLock = threading.Lock()
 
 #Lock para modificacao da variavel randomID
 randomIDLock = threading.Lock()
@@ -91,6 +91,9 @@ def clientRequestCatcher():
             requestID = requestInfo[0]
             requestName = requestInfo[1]
             requestParameters = requestInfo[2]
+
+            #Obtem a string de endereco do cliente
+            clientAddressString, _ = clientAddress
 
             #Concatena o nome do arquivo para a entrada da requisicao
             requestFileName = (clientAddressString.strip('.') + ".json")
@@ -168,7 +171,7 @@ def clientRequestCatcher():
                 sendResponse(senderLock, broker, port, serverIP, clientAddress, requestResult)
 
         #Caso contrario e se o endereco do cliente nao for vazio
-        elif clientAddressString != "":
+        elif clientAddress != "":
             
             #Responde que a requisicao e invalida
             sendResponse(senderLock, broker, port, serverIP, clientAddress, 'ERR')
