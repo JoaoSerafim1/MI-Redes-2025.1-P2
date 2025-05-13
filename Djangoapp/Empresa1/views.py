@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import json
 # Create your views here.
 @csrf_exempt
 def send_request(request):
@@ -24,4 +25,26 @@ def receive_request(request):
 def form_request(request):
     return render(request,'form.html')
 
-    
+@csrf_exempt
+def http_request(request):
+    if request.method == 'POST':
+        data = request.POST.get('data')
+        
+        return JsonResponse({'data': data})
+
+@csrf_exempt
+def http_listener(request):
+    if request.method == 'POST':
+        data = request.POST.get('data')
+        responseString = ""
+        
+        try:
+            requestObject = json.loads(data)
+        
+            response = attemptAction(requestObject)
+            
+            responseString = json.dumps(response)
+        except:
+            pass
+        
+        return JsonResponse({'data': responseString})

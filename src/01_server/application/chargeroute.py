@@ -131,7 +131,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 serverRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
                 
                 #Manda a mensagem solicitando reserva de um ponto naquele servidor
-                sendServerMessage(chosenRouteNodeAddress, ["drr", serverRequestParameters])
+                httpListener(chosenRouteNodeAddress, ["drr", serverRequestParameters])
 
                 content = httpRequest(fileLock, 10)
 
@@ -162,7 +162,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 serverRequestParameters = [vehicleID]
                 
                 #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                sendServerMessage(chosenRouteNodeAddress, ["urr", serverRequestParameters])
+                httpListener(chosenRouteNodeAddress, ["urr", serverRequestParameters])
 
             #Finalizado o loop, verifica o status da direcao novamente
             #Se ainda estiver normal, a operacao foi bem-sucedida, o que quer dizer que a rota atual do veiculo sera limpa, sera e registrada a nova
@@ -200,7 +200,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                     serverRequestParameters = [vehicleID]
                     
                     #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                    sendServerMessage(lastRouteNodeAddress, ["urr", serverRequestParameters])
+                    httpListener(lastRouteNodeAddress, ["urr", serverRequestParameters])
 
     except:
         pass
@@ -343,7 +343,7 @@ def doReservation(fileLock: threading.Lock, serverAddress, timeWindow, requestPa
         fileLock.release()
     
     #Manda a mensagem de resposta da solicitacao de reserva (lista com coordenadas do ponto reservado, caso seja possivel, ou uma lista vazia, caso nao seja)
-    sendServerMessage(serverAddress, coordList)
+    httpListener(serverAddress, coordList)
 
     return zeroBookingConflicts
 
