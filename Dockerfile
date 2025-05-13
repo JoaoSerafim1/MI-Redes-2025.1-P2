@@ -19,24 +19,19 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 #Install fontconfig
-RUN apt-get update -y && \
-    apt-get install -y fontconfig
-
+RUN apt-get install -y fontconfig
 # Install Tkinter
-RUN apt-get update -y && \
-    apt-get install -y tk
+RUN apt-get install -y tk
 # Install CustomTkinter
 RUN pip install customtkinter
 
 #Install Mosquitto Broker
-RUN apt-get update -y && \
-    apt-get upgrade -y && \
+RUN apt-get upgrade -y && \
     apt-get install -y mosquitto && \
     apt-get install -y mosquitto-clients
 
 #Install Paho MQTT
-RUN apt-get update -y && \
-    pip install paho-mqtt
+RUN pip install paho-mqtt
 
 # Install requests
 RUN pip install requests
