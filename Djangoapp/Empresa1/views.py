@@ -35,7 +35,7 @@ def http_request(request):
 @csrf_exempt
 def http_listener(request):
     if request.method == 'POST':
-        data = request.POST.get('data')
+        data = request.POST('data')
         responseString = ""
         
         try:
@@ -48,6 +48,8 @@ def http_listener(request):
             pass
         
         return JsonResponse({'data': responseString})
+    elif request.method == 'GET':
+        return render(request, 'form.html')
     
 def attemptAction(requestObject):
 
