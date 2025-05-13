@@ -25,61 +25,22 @@ serverReceiverLock = threading.Lock()
 serverSenderLock = threading.Lock()
 
 #Funcao para receber uma requisicao de um servidor-remetente (protocolo MQTT)
-def listenToServerMessage(fileLock: threading.Lock, timeout):
-    
-    global serverReceiverLock
+def httpRequest(fileLock: threading.Lock, destinyServerAddress, message, timeout):
 
-    global testServerIP
-    global testBroker
-    global testPort
-    
-    topic = testServerIP
+    decodedBytes = ""
 
-    add = ("", 0)
-    content = ""
 
-    mqttClientReceiver = mqtt_client.Client(callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
-    
-    setattr(mqttClientReceiver, "decodedBytes", "")
 
-    #Funcao que determina o que acontece quando uma mensagem e recebida em um topico assinado
-    def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
-        setattr(client, "decodedBytes", msg.payload.decode())
-        
-        #print("=============================================")
-        #print(mqttClientReceiver.decodedBytes)
-        #print("=============================================")
-        
-    mqttClientReceiver.on_message = on_message
-
-    serverReceiverLock.acquire()
-
-    try:
-        #Conecta ao testBroker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
-        mqttClientReceiver.connect(testBroker, testPort)
-        mqttClientReceiver.subscribe(topic)
-        mqttClientReceiver.loop_start()
-
-        start_time = time.time()
-
-        while (((time.time() - start_time) < timeout) and (mqttClientReceiver.decodedBytes == "")):
-            pass
-            
-        mqttClientReceiver.loop_stop()
-        mqttClientReceiver.unsubscribe(topic)
-        mqttClientReceiver.disconnect()
-
-    except:
-        pass
-
-    serverReceiverLock.release()
+    #print("=============================================")
+    #print(mqttClientReceiver.decodedBytes)
+    #print("=============================================")
     
     try:
         #Caso a mensagem nao seja vazia
-        if (mqttClientReceiver.decodedBytes != ""):
+        if (decodedBytes != ""):
             
             #De-serializa a mensagem decodificada 
-            unserializedObj = json.loads(mqttClientReceiver.decodedBytes)
+            unserializedObj = json.loads(decodedBytes)
 
             #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
             if (len(unserializedObj) == 3):

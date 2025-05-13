@@ -133,7 +133,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 #Manda a mensagem solicitando reserva de um ponto naquele servidor
                 sendServerMessage(chosenRouteNodeAddress, ["drr", serverRequestParameters])
 
-                content = listenToServerMessage(fileLock, 10)
+                content = httpRequest(fileLock, 10)
 
                 #Se a resposta e positiva, podemos ir usar as proximas coordenadas e ir ao proximo elemento
                 if (len(content) >= 2):
