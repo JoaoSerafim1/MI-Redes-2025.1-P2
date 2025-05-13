@@ -1,4 +1,4 @@
-# Sistemas distribuído - Recarga de Veículos Elétricos
+# Sistemas distribuídos - Recarga de Veículos Elétricos
 
 Chamamos sistemas distribuídos aqueles compostos por várias instâncias individuais de aplicação, costumeiramente de dois ou mais tipos distintos, que trabalham em conjunto para prover um serviço em massa.
 
