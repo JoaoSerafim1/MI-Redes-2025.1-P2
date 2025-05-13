@@ -48,3 +48,16 @@ def http_listener(request):
             pass
         
         return JsonResponse({'data': responseString})
+    
+def attemptAction(requestObject):
+
+    returnList = []
+
+    returnList.append(requestObject)
+    
+    try:
+        returnList.append((len(requestObject)))
+    except:
+        pass
+
+    return returnList

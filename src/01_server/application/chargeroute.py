@@ -131,9 +131,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 serverRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
                 
                 #Manda a mensagem solicitando reserva de um ponto naquele servidor
-                httpListener(chosenRouteNodeAddress, ["drr", serverRequestParameters])
-
-                content = httpRequest(fileLock, 10)
+                content = httpRequest(fileLock, chosenRouteNodeAddress, ["drr", serverRequestParameters], 10)
 
                 #Se a resposta e positiva, podemos ir usar as proximas coordenadas e ir ao proximo elemento
                 if (len(content) >= 2):
@@ -162,7 +160,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 serverRequestParameters = [vehicleID]
                 
                 #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                httpListener(chosenRouteNodeAddress, ["urr", serverRequestParameters])
+                httpRequest(fileLock, chosenRouteNodeAddress, ["urr", serverRequestParameters], 0)
 
             #Finalizado o loop, verifica o status da direcao novamente
             #Se ainda estiver normal, a operacao foi bem-sucedida, o que quer dizer que a rota atual do veiculo sera limpa, sera e registrada a nova
@@ -200,7 +198,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                     serverRequestParameters = [vehicleID]
                     
                     #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                    httpListener(lastRouteNodeAddress, ["urr", serverRequestParameters])
+                    httpRequest(lastRouteNodeAddress, ["urr", serverRequestParameters])
 
     except:
         pass
@@ -341,11 +339,8 @@ def doReservation(fileLock: threading.Lock, serverAddress, timeWindow, requestPa
             writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
 
         fileLock.release()
-    
-    #Manda a mensagem de resposta da solicitacao de reserva (lista com coordenadas do ponto reservado, caso seja possivel, ou uma lista vazia, caso nao seja)
-    httpListener(serverAddress, coordList)
 
-    return zeroBookingConflicts
+    return coordList
 
 #Funcao para desfazer a reserva de um ponto de recarga
 def undoReservation(fileLock: threading.Lock, requestParameters):
