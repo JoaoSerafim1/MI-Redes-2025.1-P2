@@ -25,6 +25,38 @@ if [ $1 = 'build' ]; then
     docker network create dev_bridge
 fi
 
+if [ $1 = 'saveimage' ]; then
+    
+    docker save python-redes-image:latest -o python-redes-image.tar
+fi
+
+if [ $1 = 'loadimage' ]; then
+    
+    docker container remove -f electric_vehicle_04
+    docker container remove -f electric_vehicle_03
+    docker container remove -f electric_vehicle_02
+    docker container remove -f electric_vehicle_01
+    docker container remove -f charge_station_10
+    docker container remove -f charge_station_09
+    docker container remove -f charge_station_08
+    docker container remove -f charge_station_07
+    docker container remove -f charge_station_06
+    docker container remove -f charge_station_05
+    docker container remove -f charge_station_04
+    docker container remove -f charge_station_03
+    docker container remove -f charge_station_02
+    docker container remove -f charge_station_01
+    docker container remove -f charge_server_04
+    docker container remove -f charge_server_03
+    docker container remove -f charge_server_02
+    docker container remove -f charge_server_01
+    docker network remove dev_bridge
+    docker image remove python-redes-image
+
+    docker load -i python-redes-image.tar
+    docker network create dev_bridge
+fi
+
 if [ $1 = 'run' ]; then
 
     docker container remove -f electric_vehicle_04
