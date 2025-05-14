@@ -18,27 +18,6 @@ from application.chargeslot import *
 from application.chargeroute import *
 
 
-#PROPRIEDADES DO SERVIDOR
-####################################################################################
-
-#Maximo de threads simultaneos para requisicoes de clientes (estacoes, veiculos)
-maxClientThreads = 8
-
-#Maximo de threads simultaneos para requisicoes de outros servidores
-maxServerThreads = 8
-
-#IP do servidor, IP do broker MQTT e porta do broker MQTT
-localServerIP = socket.gethostbyname(socket.gethostname())
-broker = 'broker.emqx.io'
-mqttPort = 1883
-httpPort = 8025
-
-#Tempo em segundos antes e depois do horario exato marcado durante o qual um posto de recarga sera considerado como "ocupado"
-timeWindow = 7200
-
-####################################################################################
-
-
 #Locks para uso dos sockets
 senderLock = threading.Lock()
 receiverLock = threading.Lock()
@@ -188,11 +167,6 @@ def serverRequestCatcher():
     global localServerIP
     global httpPort
 
-    #Aumenta a contagem de threads ativos
-    httpHandlerLock.acquire()
-    serverThreadCount += 1
-    httpHandlerLock.release()
-
     #Endereco do servidor (tupla com IP e porta)
     server_address = (localServerIP, httpPort)
     
@@ -232,6 +206,11 @@ def serverRequestHandlerThreadManager():
 
         if(createNewThread == True):
 
+            #Aumenta a contagem de threads ativos
+            httpHandlerLock.acquire()
+            serverThreadCount += 1
+            httpHandlerLock.release()
+
             #Cria o thread, inicia, adiciona para a lista e aumenta o contador
             newThread = threading.Thread(target=serverRequestCatcher, args=())
             newThread.start()
@@ -239,6 +218,19 @@ def serverRequestHandlerThreadManager():
 
 
 #Inicio do programa
+
+#IP do servidor, porta do broker MQTT e porta para requisicoes HTTP
+localServerIP = socket.gethostbyname(socket.gethostname())
+
+#Pergunta endereco do broker MQTT
+broker = input("Insira o endereço IP do broker MQTT (OU PRESSIONE ENTER para utilizar o endereço do proprio servidor): ")
+
+if (broker == ""):
+    broker = localServerIP
+
+elif (broker == "test"):
+    broker = testBroker
+    
 
 #Printa o endereco IP do servidor
 print("ENDERECO IP DO SERVIDOR: " + localServerIP)
