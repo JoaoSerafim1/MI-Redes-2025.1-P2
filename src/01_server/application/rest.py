@@ -1,6 +1,6 @@
 ###########################################################
 #
-# => MODULO DE COMUNICACAO VIA PROTOCOLO HTTP-REST <= (VERSAO DE TESTE QUE USA MQTT AO INVES DE REST)
+# => MODULO DE COMUNICACAO VIA PROTOCOLO HTTP-REST
 #
 ###########################################################
 
@@ -11,42 +11,118 @@ import time
 import json
 import socket
 import requests
-#Importa os componentes utilizados da biblioteca Paho MQTT
-from paho.mqtt import client as mqtt_client
+import http.server
 
 #Importa os modulos da aplicacao
 from application.util import *
 
-testServerIP = socket.gethostbyname(socket.gethostname())
-testBroker = 'testBroker.emqx.io'
-testPort = 1883
 
-serverReceiverLock = threading.Lock()
-serverSenderLock = threading.Lock()
+#Lock para modificacao da variavel que diz se o ultimo thread de recebimento de requisicoes HTTP-REST esta ocupado
+httpHandlerLock = threading.Lock()
 
-#Funcao para receber uma requisicao de um servidor-remetente (protocolo MQTT)
-def httpRequest(fileLock: threading.Lock, destinyServerAddress, message, timeout):
+#Variavel que diz se o ultimo thread de recebimento de requisicoes HTTP-REST esta ocupado, precisando portanto da criacao de um novo (se possivel)
+isInNeedOfHTTPHandler = False
 
-    messageString = json.dumps(message)
-    
-    request_url = "http://"+destinyServerAddress+':8000/Empresa1/sender/' 
-    decodedBytes = requests.post(request_url, data=messageString,timeout=timeout)
-    decodedBytes = decodedBytes.json()
-    
 
-    print("=============================================")
-    print(decodedBytes)
-    print("=============================================")
-    
-    try:
-        #Caso a mensagem nao seja vazia
-        if (decodedBytes != ""):
+#Extensao da classe de servidor HTTP
+class CustomHTTPServer(http.server.HTTPServer):
+
+    #Override do metodo chamado para linkar soquetes
+    def server_bind(self):
+        
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        self.socket.bind(self.server_address)
+        self.server_address = self.socket.getsockname()
+
+#Extensao da classe que lida com callbacks em requisicoes HTTP
+class RequestHandler(http.server.BaseHTTPRequestHandler):
+
+    global fileLock
+    global httpHandlerLock
+    global isInNeedOfHTTPHandler
+
+    #Override do metodo chamado a cada nova requisicao tipo POST que chega ao servidor
+    def do_POST(self):
+        
+        global fileLock
+        global httpHandlerLock
+        global isInNeedOfHTTPHandler
+
+        httpHandlerLock.acquire()
+        isInNeedOfHTTPHandler = True
+        httpHandlerLock.release()
+
+        #Se a URL tiver extensao /submit/ 
+        if self.path == '/submit':
             
-            #De-serializa a mensagem decodificada 
-            content = json.loads(decodedBytes)
+            #Obtem informacoes da requisicao
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length).decode('utf-8')
+            
+            try:
+                #Transforma o conteudo JSON em objeto python
+                data = json.loads(post_data)
+
+                try:
+                    clientAddressString, _ = self.client_address
+                    #Registra no log
+                    registerLogEntry(fileLock, ["logs", "received"], "HTTPREQUEST", "ADDRESS", clientAddressString)
+                except:
+                    pass
+
+                #Prepara o codigo e o cabecalho da resposta
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+
+                #Faz acao desejada, se aplicavel, e obtem retorno
+                response_data = attemptAction(data)
+                self.wfile.write(json.dumps(response_data).encode())
+            except:
+                pass
+        else:
+            
+            self.send_response(404)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            response_data = {"ERR": "PAGE NOT FOUND => use /submit"}
+            self.wfile.write(json.dumps(response_data).encode())
+
+#Funcao para fazer uma requisicao a partir de um servidor-remetente e ler a resposta
+def httpRequest(fileLock: threading.Lock, destinyServerAddress, port, timeout, payload):
+
+    url = 'http://' + destinyServerAddress + ':' + str(port) + '/submit'
+    
+    #Variavel do conteudo retornado, inicialmente string vazia
+    content = ""
+
+    #Tenta conectar ao servidor remoto e fazer a requisicao
+    try:
+        
+        response = requests.post(url, json=payload, timeout=timeout)
+
+        #print("=============================================")
+        #print(response)
+        #print("=============================================")
+
+        #Verifica a resposta
+        if response.status_code == 200:
+            content = response.json()
+
+        #Registra no log
+        registerLogEntry(fileLock, ["logs", "received"], "HTTPRESPONSE", "ADDRESS", destinyServerAddress)
+    
+    #Se falhar, foi devido a timeout
     except:
         pass
     
     #Retorna o objeto da mensagem
     return content
 
+def attemptAction(data):
+    
+    print(data)
+    print(len(data))
+
+    return (len(data))

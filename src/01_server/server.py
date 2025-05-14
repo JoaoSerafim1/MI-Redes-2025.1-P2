@@ -12,6 +12,7 @@ import threading
 #Importa os modulos da aplicacao
 from application.util import *
 from application.mqtt import *
+from application.rest import *
 from application.clientmanager import *
 from application.chargeslot import *
 from application.chargeroute import *
@@ -20,22 +21,23 @@ from application.chargeroute import *
 #PROPRIEDADES DO SERVIDOR
 ####################################################################################
 
-#Maximo de threads simultaneos para clientes (estacoes, veiculos)
+#Maximo de threads simultaneos para requisicoes de clientes (estacoes, veiculos)
 maxClientThreads = 8
 
+#Maximo de threads simultaneos para requisicoes de outros servidores
+maxServerThreads = 8
+
 #IP do servidor, IP do broker MQTT e porta do broker MQTT
-serverIP = socket.gethostbyname(socket.gethostname())
+localServerIP = socket.gethostbyname(socket.gethostname())
 broker = 'broker.emqx.io'
-port = 1883
+mqttPort = 1883
+httpPort = 8025
 
 #Tempo em segundos antes e depois do horario exato marcado durante o qual um posto de recarga sera considerado como "ocupado"
 timeWindow = 7200
 
 ####################################################################################
 
-
-#Lock para manipulacao de arquivos (tambem controla requisicoes pois todo o processo e baseado em leitura e escrita de arquivos)
-fileLock = threading.Lock()
 
 #Locks para uso dos sockets
 senderLock = threading.Lock()
@@ -44,7 +46,7 @@ receiverLock = threading.Lock()
 #Lock para modificacao da variavel randomID
 randomIDLock = threading.Lock()
 
-#Lista de threads
+#Listas de threads
 threadList = []
 
 #ID Aleatorio inicial
@@ -53,16 +55,18 @@ randomID = "*"
 #Variavel de execucao do programa
 isExecuting = True
 
-#Variavel de contagem de fechamentos dos threads
-threadCount = 1
+#Variavel de contagem de fechamentos dos threads de requisicoes de clientes
+clientThreadCount = 1
 
+#Variavel de contagem dos threads de requisicoes de outros servidores
+serverThreadCount = 0
 
 #Funcao para cada thread que espera uma requisicao de um cliente
 def clientRequestCatcher():
 
     #Globais utilizadas
     global isExecuting
-    global threadCount
+    global clientThreadCount
 
     global fileLock
     global randomIDLock
@@ -70,8 +74,8 @@ def clientRequestCatcher():
     global receiverLock
     global senderLock
     global broker
-    global port
-    global serverIP
+    global mqttPort
+    global localServerIP
 
     global timeWindow
 
@@ -79,7 +83,7 @@ def clientRequestCatcher():
     while (isExecuting == True):
 
         #Espera chegar uma requisicao
-        clientAddress, requestInfo = listenToRequest(fileLock, receiverLock, broker, port, 5)
+        clientAddress, requestInfo = listenToRequest(fileLock, receiverLock, broker, mqttPort, 5)
 
         #Obtem a string de endereco do cliente
         clientAddressString, _ = clientAddress
@@ -134,54 +138,110 @@ def clientRequestCatcher():
                     
                     randomIDLock.acquire()
 
-                    randomID = registerChargeStation(fileLock, randomID, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
+                    randomID = registerChargeStation(fileLock, randomID, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
 
                     randomIDLock.release()
 
                 elif (requestName == 'rve'):
 
-                    registerVehicle(fileLock, randomIDLock, randomID, senderLock, broker, port, serverIP, requestID, clientAddress)
+                    registerVehicle(fileLock, randomIDLock, randomID, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress)
 
                 elif (requestName == 'gbv'):
 
-                    getBookedVehicle(fileLock, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
+                    getBookedVehicle(fileLock, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
                 
                 elif (requestName == 'nsr'):
 
-                    getNearestAvailableStationInfo(fileLock, senderLock, broker, port, serverIP, timeWindow, requestID, clientAddress, requestParameters)
+                    getNearestAvailableStationInfo(fileLock, senderLock, broker, mqttPort, localServerIP, timeWindow, requestID, clientAddress, requestParameters)
 
                 elif (requestName == 'bcs'):
                     
-                    attemptCharge(fileLock, senderLock, broker, port, serverIP, timeWindow, requestID, clientAddress, requestParameters)
+                    attemptCharge(fileLock, senderLock, broker, mqttPort, localServerIP, timeWindow, requestID, clientAddress, requestParameters)
                     
                 elif (requestName == 'fcs'):
 
-                    freeChargingStation(fileLock, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
+                    freeChargingStation(fileLock, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
                 
                 elif(requestName == 'gpr'):
 
-                    respondWithPurchase(fileLock, senderLock, broker, port, serverIP, requestID, clientAddress, requestParameters)
+                    respondWithPurchase(fileLock, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
             
             #Caso contrario, manda a resposta novamente
             else:
 
-                sendResponse(senderLock, broker, port, serverIP, clientAddress, requestResult)
+                sendResponse(senderLock, broker, mqttPort, localServerIP, clientAddress, requestResult)
 
         #Caso contrario e se o endereco do cliente nao for vazio
         elif clientAddressString != "":
             
             #Responde que a requisicao e invalida
-            sendResponse(senderLock, broker, port, serverIP, clientAddress, 'ERR')
+            sendResponse(senderLock, broker, mqttPort, localServerIP, clientAddress, 'ERR')
     
-    print("THREAD ENCERRADO (" + str(threadCount) + "/" + str(maxClientThreads) + ")")
-    threadCount += 1
+    print("THREAD ENCERRADO (" + str(clientThreadCount) + "/" + str(maxClientThreads) + ")")
+    clientThreadCount += 1
+
+#Funcao para receber UMA requisicao de outro servidor
+def serverRequestCatcher():
+
+    global httpHandlerLock
+    global serverThreadCount
+    global localServerIP
+    global httpPort
+
+    #Aumenta a contagem de threads ativos
+    httpHandlerLock.acquire()
+    serverThreadCount += 1
+    httpHandlerLock.release()
+
+    #Endereco do servidor (tupla com IP e porta)
+    server_address = (localServerIP, httpPort)
+    
+    #Objeto de servidor HTTP-REST
+    httpd = CustomHTTPServer(server_address, RequestHandler)
+    
+    httpd.handle_request()
+
+    #Diminui a contagem de threads ativos
+    httpHandlerLock.acquire()
+    serverThreadCount -= 1
+    httpHandlerLock.release()
+    
+
+#Funcao apra gerenciar as threads de requisicoes HTTP
+def serverRequestHandlerThreadManager():
+
+    global serverThreadCount
+    global maxServerThreads
+    global isInNeedOfHTTPHandler
+    global httpHandlerLock
+    global threadList
+
+    while (isExecuting == True):
+
+        #Variavel que diz se deve ser criado novo thread
+        createNewThread = False
+
+        httpHandlerLock.acquire()
+
+        #O novo thread sera criado caso o limite nao esteja estourado e seja requisitado OU caso nao existam threads ativos
+        if (((serverThreadCount < maxServerThreads) and (isInNeedOfHTTPHandler == True)) or serverThreadCount == 0):
+            createNewThread = True
+            isInNeedOfHTTPHandler = False
+
+        httpHandlerLock.release()
+
+        if(createNewThread == True):
+
+            #Cria o thread, inicia, adiciona para a lista e aumenta o contador
+            newThread = threading.Thread(target=serverRequestCatcher, args=())
+            newThread.start()
+            threadList.append(newThread)
 
 
 #Inicio do programa
 
-#Obtem e printa o endereco IP do servidor
-hostAddress = socket.gethostbyname(socket.gethostname())
-print("ENDERECO IP DO SERVIDOR: " + hostAddress)
+#Printa o endereco IP do servidor
+print("ENDERECO IP DO SERVIDOR: " + localServerIP)
 
 #Obtem um ID aleatorio de 24 elementos alfanumericos e exibe mensagem da operacao
 randomID = getRandomID(fileLock, randomID)
@@ -190,13 +250,18 @@ print("ID para o proximo cadastro de estacao de carga: " + randomID)
 #Exibe mensagem que diz como sair da aplicacao
 print("PRESSIONE ENTER A QUALQUER MOMENTO PARA ENCERRAR A APLICACAO")
 
-#Loop para indexar todos os threads
+#Loop para indexar todos os threads dos clientes
 for threadIndex in range(0, maxClientThreads):
 
     #Cria o thread, inicia e adiciona para a lista
     newThread = threading.Thread(target=clientRequestCatcher, args=())
     newThread.start()
     threadList.append(newThread)
+
+#Thread de gerenciamento dos subthreads de requisicoes HTTP
+httpManagerThread = threading.Thread(target=serverRequestHandlerThreadManager, args=())
+httpManagerThread.start()
+threadList.append(httpManagerThread)
 
 #Fora dos threads, input() apenas segura a execucao do programa principal ate ser pressionado
 input()

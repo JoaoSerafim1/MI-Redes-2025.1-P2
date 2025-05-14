@@ -14,6 +14,8 @@ import random
 #Importa as bibliotecas customizadas da aplicacao
 from application.lib.db import *
 
+fileLock = threading.Lock()
+
 
 #Funcao para obter um novo ID aleatorio
 def getRandomID(fileLock: threading.Lock, randomID):
