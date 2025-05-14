@@ -230,14 +230,18 @@ fi
 
 if [ $1 = 'import' ]; then
     
-    docker container cp charge_server_01:/python_redes/01_server/application/clientdata ./files/imported/server_01
-    docker container cp charge_server_01:/python_redes/01_server/application/logs ./files/imported/server_01
-    docker container cp charge_server_02:/python_redes/01_server/application/clientdata ./files/imported/server_02
-    docker container cp charge_server_02:/python_redes/01_server/application/logs ./files/imported/server_02
-    docker container cp charge_server_03:/python_redes/01_server/application/clientdata ./files/imported/server_03
-    docker container cp charge_server_03:/python_redes/01_server/application/logs ./files/imported/server_03
-    docker container cp charge_server_04:/python_redes/01_server/application/clientdata ./files/imported/server_04
-    docker container cp charge_server_04:/python_redes/01_server/application/logs ./files/imported/server_04
+    docker container cp charge_server_01:/python_redes/01_server/clientdata ./files/imported/server_01
+    docker container cp charge_server_01:/python_redes/01_server/serverdata ./files/imported/server_01
+    docker container cp charge_server_01:/python_redes/01_server/logs ./files/imported/server_01
+    docker container cp charge_server_02:/python_redes/01_server/clientdata ./files/imported/server_02
+    docker container cp charge_server_02:/python_redes/01_server/serverdata ./files/imported/server_02
+    docker container cp charge_server_02:/python_redes/01_server/logs ./files/imported/server_02
+    docker container cp charge_server_03:/python_redes/01_server/clientdata ./files/imported/server_03
+    docker container cp charge_server_03:/python_redes/01_server/serverdata ./files/imported/server_03
+    docker container cp charge_server_03:/python_redes/01_server/logs ./files/imported/server_03
+    docker container cp charge_server_04:/python_redes/01_server/clientdata ./files/imported/server_04
+    docker container cp charge_server_04:/python_redes/01_server/serverdata ./files/imported/server_04
+    docker container cp charge_server_04:/python_redes/01_server/logs ./files/imported/server_04
     docker container cp charge_station_01:/python_redes/02_station/stationdata ./files/imported/station_01
     docker container cp charge_station_02:/python_redes/02_station/stationdata ./files/imported/station_02
     docker container cp charge_station_03:/python_redes/02_station/stationdata ./files/imported/station_03
@@ -257,12 +261,16 @@ fi
 if [ $1 = 'export' ]; then
     
     docker container cp ./files/export/server_01/clientdata charge_server_01:/python_redes/01_server/application
+    docker container cp ./files/export/server_01/serverdata charge_server_01:/python_redes/01_server/application
     docker container cp ./files/export/server_01/logs charge_server_01:/python_redes/01_server/application
     docker container cp ./files/export/server_02/clientdata charge_server_02:/python_redes/01_server/application
+    docker container cp ./files/export/server_02/serverdata charge_server_02:/python_redes/01_server/application
     docker container cp ./files/export/server_02/logs charge_server_02:/python_redes/01_server/application
     docker container cp ./files/export/server_03/clientdata charge_server_03:/python_redes/01_server/application
+    docker container cp ./files/export/server_03/serverdata charge_server_03:/python_redes/01_server/application
     docker container cp ./files/export/server_03/logs charge_server_03:/python_redes/01_server/application
     docker container cp ./files/export/server_04/clientdata charge_server_04:/python_redes/01_server/application
+    docker container cp ./files/export/server_04/serverdata charge_server_04:/python_redes/01_server/application
     docker container cp ./files/export/server_04/logs charge_server_04:/python_redes/01_server/application
     docker container cp ./files/export/station_01/stationdata charge_station_01:/python_redes/02_station
     docker container cp ./files/export/station_02/stationdata charge_station_02:/python_redes/02_station
