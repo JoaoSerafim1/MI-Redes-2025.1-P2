@@ -25,29 +25,22 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length).decode('utf-8')
             
             try:
-                
                 data = json.loads(post_data)
-            
-            except json.JSONDecodeError:
-                
-                self.send_response(400)
-                self.send_header('Content-type', 'text/plain')
+
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(b"Invalid JSON")
-                return
-            
-            self.send_response(201)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            response_data = {"message": "Data received", "received_data": data}
-            self.wfile.write(json.dumps(response_data).encode())
-        
+                response_data = {"sent-obj-size": len(data)}
+                self.wfile.write(json.dumps(response_data).encode())
+            except:
+                pass
         else:
             
             self.send_response(404)
-            self.send_header('Content-type', 'text/plain')
+            self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(b"Not found")
+            response_data = {"ERR": "YOU FCKD UP"}
+            self.wfile.write(json.dumps(response_data).encode())
 
 server_address = ('', port)
 httpd = CustomHTTPServer(server_address, RequestHandler)
