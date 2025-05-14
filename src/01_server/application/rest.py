@@ -1,20 +1,22 @@
 ###########################################################
 #
-# => MODULO DE COMUNICACAO VIA PROTOCOLO HTTP-REST
+# => MODULO DE COMUNICACAO VIA PROTOCOLO HTTP-REST <=
 #
 ###########################################################
 
 
 #Importa bibliotecas basicas do python 3
 import threading
-import time
 import json
 import socket
 import requests
 import http.server
 
 #Importa os modulos da aplicacao
+from application.properties import *
 from application.util import *
+from application.chargeroute import doReservation as doReservationAlt
+from application.chargeroute import undoReservation as undoReservationAlt
 
 
 #Lock para modificacao da variavel que diz se o ultimo thread de recebimento de requisicoes HTTP-REST esta ocupado
@@ -41,6 +43,10 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     global fileLock
     global httpHandlerLock
     global isInNeedOfHTTPHandler
+
+    #Override para silenciar o logging de mensagens
+    def log_message(self, format, *args):
+        pass
 
     #Override do metodo chamado a cada nova requisicao tipo POST que chega ao servidor
     def do_POST(self):
@@ -122,7 +128,26 @@ def httpRequest(fileLock: threading.Lock, destinyServerAddress, port, timeout, p
 
 def attemptAction(data):
     
-    print(data)
-    print(len(data))
+    #Se o formato for adequado
+    try:
+        
+        #Dados da requisicao (Nome e parametros)
+        requestName = data[0]
+        requestParameters = data[1]
 
-    return (len(data))
+        #Executa a requisica desejada e retorna a resposta
+        if (requestName == 'drr'):
+            
+            return doReservationAlt(fileLock, timeWindow, requestParameters)
+        
+        elif (requestName == 'udr'):
+
+            return undoReservationAlt(fileLock, requestParameters)
+        
+        else:
+
+            return "ERR"
+
+    except:
+
+        return "ERR"

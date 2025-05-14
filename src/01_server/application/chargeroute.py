@@ -217,7 +217,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
 
 
 #Funcao para reservar um ponto de recarga
-def doReservation(fileLock: threading.Lock, serverAddress, timeWindow, requestParameters):
+def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
     
     vehicleID = requestParameters[0]
     reservationTime = requestParameters[1]
@@ -236,11 +236,12 @@ def doReservation(fileLock: threading.Lock, serverAddress, timeWindow, requestPa
     #Loop que percorre a lista de estacoes de carga
     for stationIndex in range(0, len(stationList)):
         
-        #Nome 
+        #Nome do arquivo de estacao atual
         actualStationFileName = stationList[stationIndex]
 
+        #Exclui arquivos invalidos (ex: .gitignore)
         if ((len(actualStationFileName) == 29)):
-
+            
             actualID = ""
             
             #Acha o ID da estacao a retornar
@@ -275,7 +276,7 @@ def doReservation(fileLock: threading.Lock, serverAddress, timeWindow, requestPa
                     bookedTime = actualStationTable["vehicle_bookings"][actualBookedVehicleID]
 
                     #Se a entrada na agenda nao for do veiculo solicitante e a janela de tempo do agendamento (2 horas antes e depois do horario exato marcado) contemplar o tempo atual, nao podera haver recarga
-                    if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (actualTime > (bookedTime - timeWindow))) and (actualTime < (bookedTime + timeWindow))):
+                    if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (reservationTime > (bookedTime - timeWindow))) and (reservationTime < (bookedTime + timeWindow))):
                         
                         zeroBookingConflicts = False
                 
@@ -291,54 +292,32 @@ def doReservation(fileLock: threading.Lock, serverAddress, timeWindow, requestPa
             except:
                 pass
     
-    fileLock.release()
-
-    #Nome do arquivo do veiculo a ser analizado
-    vehicleFileName = (vehicleID + ".json")
-    #Nome do arquivo da estacao de carga a ser analizado
-    stationFileName = (stationID + ".json")
-
-    vehicleVerify = False
-    zeroBookingConflicts = False
-
-    if (len(stationID) == 24):
+    clientVerify = False
+    
+    #Se os clientes possuem ID de 24 de tamanho, significa que ambas sao validos e o agendamento pode ocorrer
+    if ((len(stationID) == 24) and (len(vehicleID == 24))):
         
-        #Zona de exclusao mutua referente a manipulacao de arquivos
-        fileLock.acquire()
-        vehicleVerify = verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName)
-        fileLock.release()
+        clientVerify = True
 
-    #Obtem o tempo atual, para verificar se o agendamento sequer e valido
+    #Obtem o tempo atual, para verificar se o horario do agendamento sequer e valido
     actualTime = int(time.time())
 
-    #Caso o ID do veiculo/estacao fornecidos sejam validos
-    if ((vehicleVerify == True) and (len(vehicleID) == 24) and (reservationTime > actualTime)):
+    #Caso o ID do veiculo/estacao fornecidos sejam validos e o horario do agendamento esteja alem do horario atual mais a janela de tempo de reserva
+    if ((clientVerify == True) and (reservationTime > (actualTime + timeWindow))):
 
-        zeroBookingConflicts = True
-
-        fileLock.acquire()
+        #Nome do arquivo da estacao
+        stationFileName = (stationID + ".json")
 
         #Carrega o dicionario de informacoes da estacao a ser agendada
         stationInfo = readFile(["clientdata", "clients", "stations", stationFileName])
 
-        for actualBookedVehicleID in stationInfo["vehicle_bookings"]:
-            
-            #Tempo atual agendado para a entrada na lista (chave=id do veiculo)
-            bookedTime = stationInfo["vehicle_bookings"][actualBookedVehicleID]
+        #Escreve a informacao da reserva
+        stationInfo["vehicle_bookings"][vehicleID] = reservationTime
 
-            #Se a entrada na agenda nao for do veiculo solicitante e a janela de tempo do agendamento (2 horas antes e depois do horario exato marcado) contemplar o tempo atual, nao podera haver recarga
-            if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID) and (reservationTime > (bookedTime - timeWindow)) and (reservationTime < (bookedTime + timeWindow))):
-                
-                zeroBookingConflicts = False
+        #Guardas as informacoes
+        writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
 
-        #Se nao existem conflitos, a reserva pode ser feita
-        if (zeroBookingConflicts == True):
-
-            stationInfo["vehicle_bookings"][vehicleID] = reservationTime
-
-            writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
-
-        fileLock.release()
+    fileLock.release()
 
     return coordList
 

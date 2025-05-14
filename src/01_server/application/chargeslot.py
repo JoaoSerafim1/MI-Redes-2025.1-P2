@@ -111,8 +111,8 @@ def getNearestAvailableStationInfo(fileLock: threading.Lock, senderLock: threadi
 #Funcao para tentar realizar (reserva de) abastecimento
 def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverIP, timeWindow, requestID, vehicleAddress, requestParameters):
 
-    #Caso os parametros da requisicao sejam do tamanho adequado...
-    if (len(requestParameters) >= 4):
+    #Caso os parametros da requisicao sejam adequados
+    try:
         
         #Recupera as informacoes
         purchaseID = requestParameters[0]
@@ -249,7 +249,7 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
             #Responde o status da requisicao para o cliente
             sendResponse(senderLock, broker, port, serverIP, vehicleAddress, 'ERR')
 
-    else:
+    except:
 
         #Grava o status da requisicao (mesmo conteudo da mensagem enviada como resposta)
         registerRequestResult(fileLock, vehicleAddress, requestID, 'ERR')
@@ -260,8 +260,8 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
 #Funcao para liberar estacao de carga
 def freeChargingStation(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverIP, requestID, stationAddress, requestParameters):
 
-    #Caso os parametros da requisicao sejam do tamanho adequado...
-    if (len(requestParameters) >= 1):
+    #Caso os parametros da requisicao sejam do tamanho adequado
+    try:
 
         #...Recupera o ID da estacao
         stationID = requestParameters[0]
@@ -308,3 +308,6 @@ def freeChargingStation(fileLock: threading.Lock, senderLock: threading.Lock, br
             
             #Responde o status da requisicao para o cliente
             sendResponse(senderLock, broker, port, serverIP, stationAddress, 'NF')
+            
+    except:
+        pass
