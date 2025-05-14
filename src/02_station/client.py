@@ -260,6 +260,9 @@ class Station():
 #Cria um objeto da classe Station
 station = Station()
 
+#Endereco do broker MQTT de teste
+testBroker = 'broker.emqx.io'
+
 #Valores iniciais do programa
 requestID = "0"
 
@@ -269,7 +272,14 @@ dataTable = {}
 #Pergunta endereco do servidor
 serverAddress = input("Insira o endereço IP do servidor: ")
 
-broker = 'broker.emqx.io'
+#Pergunta endereco do broker MQTT
+broker = input("Insira o endereço IP do broker MQTT (OU PRESSIONE ENTER para utilizar o endereço do servidor conectado): ")
+
+if (broker == ""):
+    broker = serverAddress
+
+elif (broker == "test"):
+    broker = testBroker
 
 #Verifica se o arquivo de texto "station_data.json" esta presente, e caso nao esteja...
 if (verifyFile(["stationdata"], "station_data.json") == False):
