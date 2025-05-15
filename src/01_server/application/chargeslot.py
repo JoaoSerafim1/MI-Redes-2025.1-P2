@@ -126,21 +126,13 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
         stationFileName = (stationID + ".json")
 
         stationVerify = False
-        vehicleVerify = False
 
         fileLock.acquire()
         stationVerify = verifyFile(["clientdata", "clients", "stations"], stationFileName)
         fileLock.release()
-        
-        if ((stationVerify == True) and (len(stationID) == 24)):
-            
-            #Zona de exclusao mutua referente a manipulacao de arquivos
-            fileLock.acquire()
-            vehicleVerify = verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName)
-            fileLock.release()
 
         #Caso o ID do veiculo/estacao fornecidos sejam validos e a compra seja confirmada
-        if ((vehicleVerify == True) and (len(vehicleID) == 24) and (stationVerify == True) and confirmPurchase(purchaseID) == True):
+        if ((stationVerify == True) and (len(stationID) == 24) and (len(vehicleID) == 24) and confirmPurchase(purchaseID) == True):
 
             zeroBookingConflicts = True
             purchaseDone = False
@@ -179,8 +171,18 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
                 purchaseTable["unitary_price"] = stationInfo["unitary_price"]
                 purchaseTable["charge_amount"] = chargeAmount
 
-                #Carrega o dicionario de informacoes do veiculo, Adiciona a compra a lista de compras do veiculo (cliente) e grava o resultado
-                vehicleInfo = readFile(["clientdata", "clients", "vehicles", vehicleFileName])
+                vehicleInfo = {}
+
+                #Carrega o dicionario de informacoes do veiculo, se possivel
+                if (verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName) == True):
+                    
+                    vehicleInfo = readFile(["clientdata", "clients", "vehicles", vehicleFileName])
+                
+                else:
+
+                    vehicleInfo["purchases"] = []
+
+                #Adiciona a compra a lista de compras do veiculo (cliente) e grava o resultado
                 vehicleInfo["purchases"].append(purchaseID)
 
                 #Modifica o veiculo atual na estacao de carga e grava o resultado

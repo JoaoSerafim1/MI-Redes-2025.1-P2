@@ -128,10 +128,16 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 chosenNodeReservationTime = reservationTimeList[nodeIndex]
 
                 #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo e o horario desejado)
-                serverRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
+                removeRequestParameters = [vehicleID]
                 
+                #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
+                httpRequest(fileLock, chosenRouteNodeAddress, ["urr", removeRequestParameters], 0)
+
+                #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo e o horario desejado)
+                addRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
+
                 #Manda a mensagem solicitando reserva de um ponto naquele servidor
-                content = httpRequest(fileLock, chosenRouteNodeAddress, ["drr", serverRequestParameters], 10)
+                content = httpRequest(fileLock, chosenRouteNodeAddress, ["drr", [addRequestParameters]], 10)
 
                 #Se a resposta e positiva, podemos ir usar as proximas coordenadas e ir ao proximo elemento
                 if (len(content) >= 2):
@@ -168,7 +174,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 
                 response = "OK"
 
-                #Nome do arquivo do veiculo
+                '''#Nome do arquivo do veiculo
                 vehicleFileName = (vehicleID + ".json")
                 
                 fileLock.acquire()
@@ -198,7 +204,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                     serverRequestParameters = [vehicleID]
                     
                     #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                    httpRequest(lastRouteNodeAddress, ["urr", serverRequestParameters])
+                    httpRequest(lastRouteNodeAddress, ["urr", serverRequestParameters])'''
 
     except:
         pass
@@ -221,9 +227,9 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
     
     vehicleID = requestParameters[0]
     reservationTime = requestParameters[1]
-    vehicleAutonomy = requestParameters[4]
-    coordX = requestParameters[2]
-    coordY = requestParameters[3]
+    vehicleAutonomy = requestParameters[2]
+    coordX = requestParameters[3]
+    coordY = requestParameters[4]
 
     fileLock.acquire()
 
@@ -232,7 +238,8 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
 
     stationID = ""
     coordList = []
-
+    actualShortestDistance = 0
+    
     #Loop que percorre a lista de estacoes de carga
     for stationIndex in range(0, len(stationList)):
         
@@ -251,21 +258,20 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
 
             #Carrega as informacoes da estacao atual
             actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
-
+            
             try:
                 #Calcula a distancia
                 actualDistance = getDistance(float(coordX), float(coordY), float(actualStationTable["coord_x"]), float(actualStationTable["coord_y"]))
-
+                
                 isOnline = False
                 zeroBookingConflicts = True
-                vehicleID = requestParameters[3]
                 
                 #Obtem o tempo atual, para verificar informacao de agendamento
                 actualTime = int(time.time())
 
                 #Verifica se a ultima vez online foi a menos de 2 minutos e 15 segundos
                 if((actualTime - (float(actualStationTable["last_online"]))) < 135):
-
+                    
                     #Esta online
                     isOnline = True
 
@@ -280,8 +286,14 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
                         
                         zeroBookingConflicts = False
                 
+                #print(actualDistance)
+                #print(vehicleAutonomy)
+                #print(isOnline)
+                #print(zeroBookingConflicts)
+                #print(actualShortestDistance)
+
                 #Se a autonomia do veiculo cobrir o trecho (distancia menor que 80% da autonomia), a estacao estiver disponivel e se estivermos no primeiro indice da lista ou se a nova menor distancia for menor que a ultima
-                if ((actualDistance < ((float(vehicleAutonomy)) * 0.8)) and (isOnline == True) and (zeroBookingConflicts == True) and (actualStationTable["actual_vehicle"] == "") and ((stationIndex == 0) or (actualDistance < actualShortestDistance))):
+                if ((actualDistance < ((float(vehicleAutonomy)) * 0.8)) and (isOnline == True) and (zeroBookingConflicts == True) and ((stationIndex == 0) or (actualDistance < actualShortestDistance))):
                     
                     #Atualiza os valores a serem repassados (achou distancia menor)
                     actualShortestDistance = actualDistance
@@ -293,9 +305,9 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
                 pass
     
     clientVerify = False
-    
+
     #Se os clientes possuem ID de 24 de tamanho, significa que ambas sao validos e o agendamento pode ocorrer
-    if ((len(stationID) == 24) and (len(vehicleID == 24))):
+    if ((len(stationID) == 24) and (len(vehicleID) == 24)):
         
         clientVerify = True
 
@@ -304,7 +316,7 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
 
     #Caso o ID do veiculo/estacao fornecidos sejam validos e o horario do agendamento esteja alem do horario atual mais a janela de tempo de reserva
     if ((clientVerify == True) and (reservationTime > (actualTime + timeWindow))):
-
+        
         #Nome do arquivo da estacao
         stationFileName = (stationID + ".json")
 
@@ -318,7 +330,7 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
         writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
 
     fileLock.release()
-
+    
     return coordList
 
 #Funcao para desfazer a reserva de um ponto de recarga

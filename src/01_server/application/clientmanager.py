@@ -87,9 +87,10 @@ def registerVehicle(fileLock: threading.Lock, randomIDLock: threading.Lock, rand
     #Cria um dicionario dos atributos do veiculo e preenche com valores iniciais
     #Valores dos pares chave-valor sao sempre string para evitar problemas com json
     dataTable = {}
-    dataTable["last_routed_at"] = "0"
-    dataTable["last_route"] = []
     dataTable["purchases"] = []
+
+    #dataTable["last_routed_at"] = "0"
+    #dataTable["last_route"] = []
 
     randomIDLock.acquire()
         
