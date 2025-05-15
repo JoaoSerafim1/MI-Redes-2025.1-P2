@@ -37,7 +37,7 @@ class User():
 
         global broker
         port = 1883
-        topic = "request"
+        topic = serverAddress
         
         mqttMessage = [self.clientIP, port, request]
 

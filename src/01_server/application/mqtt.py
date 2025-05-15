@@ -17,10 +17,20 @@ from paho.mqtt import client as mqtt_client
 from application.util import *
 
 
+#Classe para passagem de variavel de execucao do programa
+class isExecutingClass():
+
+    #Funcao inicializadora da classe
+    def __init__(self):
+        
+        #Atributos
+        self.isExecutingVariable = True
+
+
 #Funcao para receber uma requisicao de um cliente (protocolo MQTT)
-def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, broker, port, timeout):
+def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, isExecutingInstance: isExecutingClass, serverIP, broker, port, timeout):
     
-    topic = "request"
+    topic = serverIP
 
     add = ("", 0)
     content = ""
@@ -49,7 +59,7 @@ def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, brok
 
         start_time = time.time()
 
-        while (((time.time() - start_time) < timeout) and (mqttClientReceiver.decodedBytes == "")):
+        while (((time.time() - start_time) < timeout) and (mqttClientReceiver.decodedBytes == "") and (isExecutingInstance.isExecutingVariable == True)):
             pass
             
         mqttClientReceiver.loop_stop()

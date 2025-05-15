@@ -31,14 +31,17 @@ threadList = []
 #ID Aleatorio inicial
 randomID = "*"
 
-#Variavel de execucao do programa
-isExecuting = True
-
 #Variavel de contagem de fechamentos dos threads de requisicoes de clientes
 clientThreadCount = 1
 
 #Variavel de contagem dos threads de requisicoes de outros servidores
 serverThreadCount = 0
+
+#Variavel de execucao do programa
+isExecuting = True
+
+#Instancia para passagem automatica de variavel de encerramento
+isExecutingInstance = isExecutingClass()
 
 #Funcao para cada thread que espera uma requisicao de um cliente
 def clientRequestCatcher():
@@ -62,7 +65,7 @@ def clientRequestCatcher():
     while (isExecuting == True):
 
         #Espera chegar uma requisicao
-        clientAddress, requestInfo = listenToRequest(fileLock, receiverLock, broker, mqttPort, 5)
+        clientAddress, requestInfo = listenToRequest(fileLock, receiverLock, isExecutingInstance, localServerIP, broker, mqttPort, 5)
 
         #Obtem a string de endereco do cliente
         clientAddressString, _ = clientAddress
@@ -216,6 +219,20 @@ def serverRequestHandlerThreadManager():
             newThread.start()
             threadList.append(newThread)
 
+def end(isExecutingInstance: isExecutingClass):
+
+    global isExecuting
+
+    print("AGUARDE O ENCERRAMENTO:")
+
+    isExecuting = False
+    isExecutingInstance.isExecutingVariable = False
+
+    while (clientThreadCount <= maxClientThreads):
+        pass
+
+    print("ESPERANDO REQUISICAO QUALQUER PARA ENCERRAR OUVINTE DE REQUISICAO HTTP ATIVO")
+
 
 #Inicio do programa
 
@@ -257,6 +274,6 @@ threadList.append(httpManagerThread)
 
 #Fora dos threads, input() apenas segura a execucao do programa principal ate ser pressionado
 input()
+
 #Encerra o programa
-print("AGUARDE O ENCERRAMENTO:")
-isExecuting = False
+end(isExecutingInstance)

@@ -33,7 +33,7 @@ class Station():
 
         global broker
         port = 1883
-        topic = "request"
+        topic = serverAddress
         
         mqttMessage = [self.clientIP, port, request]
 
@@ -330,7 +330,7 @@ while True:
     bookedVehicleInfo = station.getBookedVehicle()
 
     #Caso tenha
-    if (bookedVehicleInfo[0] != ""):
+    if (len(bookedVehicleInfo[0]) == 24):
         
         station.actualVehicleID = bookedVehicleInfo[0]
         station.remainingCharge = bookedVehicleInfo[1]
