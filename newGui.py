@@ -25,7 +25,6 @@ class User():
 #funçõo auxiliar para obter retorno de placeholders    
 def getOriginServerPlaceholders():
     server1 = originPlaceholder.get()
-    print(server1)
     return server1
 
 vehicle = User()
@@ -69,6 +68,7 @@ purchaseHistoryCharge = ctk.StringVar()
 #Route StringVar
 routeInfo = ctk.StringVar()
 routeSelectionResult = ctk.StringVar()
+routeServer = None
 #frame4 = Gerenciador de Recarga
 
 def closeAny(frame):
@@ -119,12 +119,12 @@ def openRechargeRouteManager():
     
     def getDestinationPlaceholders():
         server2 = destinationPlaceholder.get()
-        print(server2)
+        global routeServer
+        routeServer = server2
         return server2
     
     destinationPlaceholder = ctk.CTkEntry(frame2,placeholder_text='Digite o Servidor de destino',width=180)
     destinationPlaceholder.pack(pady=10)
-
 
     routeInfoLabel = ctk.CTkLabel(frame2,textvariable=routeInfo)
     routeInfoLabel.pack(pady=30)
@@ -142,7 +142,6 @@ def openRechargeRouteManager():
     route_selection_ResultLabel = ctk.CTkLabel(frame2,textvariable=routeSelectionResult)
     route_selection_ResultLabel.pack(pady=30)
     
-
     def closeRRMWindow():
         frame2.destroy()
         frame2.update()
