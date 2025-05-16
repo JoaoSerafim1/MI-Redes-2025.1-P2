@@ -23,11 +23,11 @@ class User():
     def payForNearestSpot(self):
         return
 #funçõo auxiliar para obter retorno de placeholders    
-def getOriginServerPlaceholders():
+def getServerPlaceholders():
     server1 = originPlaceholder.get()
-    print(server1)
-    return server1
-
+    server2 = destinationPlaceholder.get()
+    tuple = (server1,server2)
+    return tuple
 vehicle = User()
 
 #Frame1 = Janela principal
@@ -53,7 +53,7 @@ critical_battery.pack(pady=20)
 originPlaceholder = ctk.CTkEntry(frame,placeholder_text='Digite o Servidor de origem',width=180)
 originPlaceholder.pack(pady=10)
 
-validateServersButton = ctk.CTkButton(frame,text=' Selecionar servidor ',command=getOriginServerPlaceholders) #precisa da referência da função correta
+validateServersButton = ctk.CTkButton(frame,text=' Selecionar servidores ',command=getServerPlaceholders) #precisa da referência da função correta
 validateServersButton.pack(pady=20)
 #TopLevelStatus
 
@@ -67,7 +67,6 @@ purchaseHistoryTotal = ctk.StringVar()
 purchaseHistoryPrice = ctk.StringVar()
 purchaseHistoryCharge = ctk.StringVar()
 #Route StringVar
-routeInfo = ctk.StringVar()
 routeSelectionResult = ctk.StringVar()
 #frame4 = Gerenciador de Recarga
 
@@ -76,6 +75,7 @@ def closeAny(frame):
     frame.update()
 
 def openRechargeManager():
+
 
     frame4 = ctk.CTkToplevel(frame) 
     frame4.title('Gerenciar Recarga')
@@ -117,32 +117,21 @@ def openRechargeRouteManager():
     frame2.geometry('600x800')
     frame2.attributes('-topmost',True)
     
-    def getDestinationPlaceholders():
-        server2 = destinationPlaceholder.get()
-        print(server2)
-        return server2
-    
     destinationPlaceholder = ctk.CTkEntry(frame2,placeholder_text='Digite o Servidor de destino',width=180)
     destinationPlaceholder.pack(pady=10)
 
-
-    routeInfoLabel = ctk.CTkLabel(frame2,textvariable=routeInfo)
-    routeInfoLabel.pack(pady=30)
     #comandos a serem definidos
-    
     backButton = ctk.CTkButton(frame2,text=' < ')
     backButton.pack(pady=5)
 
     forwardButton = ctk.CTkButton(frame2,text=' > ')
     forwardButton.pack(pady=20)
     
-    selectRouteButton = ctk.CTkButton(frame2,text=' Selecionar Rota ',command=getDestinationPlaceholders)
+    selectRouteButton = ctk.CTkButton(frame2,text=' Selecionar Rota ')
     selectRouteButton.pack(pady=5)
 
-    route_selection_ResultLabel = ctk.CTkLabel(frame2,textvariable=routeSelectionResult)
-    route_selection_ResultLabel.pack(pady=30)
-    
-
+    route_selection_Result = ctk.CTkLabel(frame2,textvariable=routeSelectionResult)
+    route_selection_Result.pack(pady=30)
     def closeRRMWindow():
         frame2.destroy()
         frame2.update()
@@ -160,6 +149,7 @@ def openHistoryWindow():
     frame3.geometry('400x600')
     frame3.attributes('-topmost',True)
 
+    
     purchaseHistoryIDLabel = ctk.CTkLabel(frame3,textvariable=purchaseHistoryID)
     purchaseHistoryIDLabel.pack(pady=5)
 
