@@ -101,14 +101,28 @@ def openRouteManager():
     def routeBackwardGet():
 
         #Captura o valor do servidor de destino
-        vehicle.destinyServerAddress = box_destination_server_address.get()
+        tempDestinyServerAddress = box_destination_server_address.get()
+
+        #Se for diferente, volta os indices de rota para zero e atualiza o servidor de destino
+        if(tempDestinyServerAddress != vehicle.destinyServerAddress):
+            
+            vehicle.routeSearchIndex = "0"
+            vehicle.routeReservationIndex = "0"
+            vehicle.destinyServerAddress = tempDestinyServerAddress
 
         vehicle.routeBackward()
 
     def routeForwardGet():
 
         #Captura o valor do servidor de destino
-        vehicle.destinyServerAddress = box_destination_server_address.get()
+        tempDestinyServerAddress = box_destination_server_address.get()
+
+        #Se for diferente, volta os indices de rota para zero e atualiza o servidor de destino
+        if(tempDestinyServerAddress != vehicle.destinyServerAddress):
+            
+            vehicle.routeSearchIndex = "0"
+            vehicle.routeReservationIndex = "0"
+            vehicle.destinyServerAddress = tempDestinyServerAddress
 
         vehicle.routeForward()
 
@@ -118,19 +132,19 @@ def openRouteManager():
     forwardButton = ctk.CTkButton(frame2,text=' > ', command=routeForwardGet)
     forwardButton.pack(pady=20)
 
-    box_actual_time_to_add = ctk.CTkEntry(frame2,placeholder_text=' digite o horario local em formato DD-MM-AAAA/hh:mm',width=400)
+    box_actual_time_to_add = ctk.CTkEntry(frame2,placeholder_text=' digite o horario local em formato DD-MM-AAAA/hh:mm ',width=400)
     box_actual_time_to_add.pack(pady=10)
 
     def addReservationGet():
 
-        #Captura o valor do horario a ser reservador
+        #Captura o valor do horario a ser reservado
         vehicle.routeReservationTimeToAdd = box_actual_time_to_add.get()
 
         vehicle.addReservationToList()
 
     def removeReservationGet():
 
-        #Captura o valor do horario a ser reservador
+        #Captura o valor do horario a ser reservado
         vehicle.routeReservationTimeToAdd = box_actual_time_to_add.get()
 
         vehicle.removeLastReservationFromList()
@@ -214,8 +228,14 @@ def infoUpdate():
         else:
             strvar_critical_battery_warning.set(" BATERIA NORMAL ")
 
-        #Atualiza endereco do servidor de acordo com a entrada do usuario
-        vehicle.serverAddress = box_local_server_address.get()
+        #Captura o valor do servidor local
+        tempLocalServerAddress = box_local_server_address.get()
+
+        #Se for diferente, volta os indices de rota para zero e atualiza o servidor de destino
+        if(tempLocalServerAddress != vehicle.serverAddress):
+            
+            vehicle.historyPurchaseIndex = "0"
+            vehicle.serverAddress = tempLocalServerAddress
         
         #Atualiza o endereco do broker de acordo com a entrada inicial e com o endereco atual do servidor
         if (vehicle.brokerCandidate == ""):
