@@ -29,7 +29,7 @@ strvar_purchase_history_total = ctk.StringVar()
 strvar_purchase_history_price = ctk.StringVar()
 strvar_purchase_history_charge = ctk.StringVar()
 strvar_route_node_list = ctk.StringVar()
-strvar_route_time_list = ctk.StringVar()
+strvar_route_name_list = ctk.StringVar()
 strvar_route_reservation_result = ctk.StringVar()
 
 
@@ -117,6 +117,32 @@ def openRouteManager():
 
     forwardButton = ctk.CTkButton(frame2,text=' > ', command=routeForwardGet)
     forwardButton.pack(pady=20)
+
+    box_actual_time_to_add = ctk.CTkEntry(frame2,placeholder_text=' digite o horario local em formato DD-MM-AAAA/hh:mm',width=400)
+    box_actual_time_to_add.pack(pady=10)
+
+    def addReservationGet():
+
+        #Captura o valor do horario a ser reservador
+        vehicle.routeReservationTimeToAdd = box_actual_time_to_add.get()
+
+        vehicle.addReservationToList()
+
+    def removeReservationGet():
+
+        #Captura o valor do horario a ser reservador
+        vehicle.routeReservationTimeToAdd = box_actual_time_to_add.get()
+
+        vehicle.removeLastReservationFromList()
+
+    button_add_reservation = ctk.CTkButton(frame2,text=' ADICIONAR HORARIO ', command=addReservationGet)
+    button_add_reservation.pack(pady=5)
+
+    button_remove_reservation = ctk.CTkButton(frame2,text=' REMOVER HORARIO ANTERIOR ', command=removeReservationGet)
+    button_remove_reservation.pack(pady=20)
+
+    label_actual_reservation_name_list = ctk.CTkLabel(frame2, textvariable= strvar_route_name_list)
+    label_actual_reservation_name_list.pack(pady=10)
     
     selectRouteButton = ctk.CTkButton(frame2,text=' REQUISITAR RESERVA NA ROTA ')
     selectRouteButton.pack(pady=5)
@@ -216,9 +242,9 @@ def infoUpdate():
 
         #INFORMACOES DA JANELA DE ROTAS
         #Atualiza texto de retorno dos nos da rota atual
-        strvar_route_node_list.set(json.dumps(vehicle.routeNodeNameList))
+        strvar_route_node_list.set(json.dumps(vehicle.routeNameList))
         #Atualiza texto indicativo da lista de horarios em construcao
-        strvar_route_time_list.set(json.dumps(vehicle.routeReservationTimeList))
+        strvar_route_name_list.set(json.dumps(vehicle.routeReservationNameList))
         #Atualiza texto de informacao da ultima tentativa de reserva de rota
         strvar_route_reservation_result.set(json.dumps(vehicle.routeReservationResult))
 

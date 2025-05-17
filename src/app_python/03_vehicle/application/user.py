@@ -2,6 +2,7 @@
 import json
 import socket
 import time
+import datetime
 
 #Importa os componentes utilizados da biblioteca Paho MQTT
 from paho.mqtt import client as mqtt_client
@@ -43,9 +44,15 @@ class User():
         self.purchaseResult = ""
 
         self.destinyServerAddress = ""
+
         self.routeSearchIndex = "0"
+        self.routeNameList = []
+
         self.routeReservationIndex = "0"
-        self.routeNodeNameList = []
+
+        self.routeReservationAddIndex = 0
+        self.routeReservationTimeToAdd = "0"
+        self.routeReservationNameList = []
         self.routeReservationTimeList = []
         self.routeReservationResult = ""
 
@@ -418,10 +425,10 @@ class User():
                 self.requestID = "1"
 
 
-    #Funcao para obter informacoes da compra no indice anterior
+    #Funcao para obter informacoes da rota no indice anterior
     def routeBackward(self):
 
-        #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+        #Faz o conteudo da requisicao (ID do veiculo e indice atual de rota - 1)
         requestParameters = [str((int(self.routeSearchIndex)) - 1), self.destinyServerAddress]
         requestContent = [self.requestID, 'rwr', requestParameters]
 
@@ -437,7 +444,7 @@ class User():
             (add, response) = self.listenToResponse()
             retry += 1
 
-        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+        #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
         if((len(response) >= 2) and (response[0] == "-1")):
 
             #Atualiza o ID de requisicao
@@ -446,7 +453,7 @@ class User():
             else:
                 self.requestID = "1"
 
-            #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+            #Faz o conteudo da requisicao (ID do veiculo e indice atual de rota - 1)
             requestParameters = [self.routeSearchIndex, self.destinyServerAddress]
             requestContent = [self.requestID, 'rwr', requestParameters]
 
@@ -462,12 +469,12 @@ class User():
                 (add, response) = self.listenToResponse()
                 retry += 1
 
-            #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+            #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
             if(len(response) >= 2 and response[0] != "-1"):
                 
                 #Atualiza informacoes da rota exibida/seelecionada
                 self.routeReservationIndex = response[0]
-                self.routeNodeNameList = response[1]
+                self.routeNameList = response[1]
 
                 #Atualiza o ID de requisicao
                 if (int(self.requestID) < 63):
@@ -475,14 +482,14 @@ class User():
                 else:
                     self.requestID = "1"
 
-        #Caso contrario, atualiza o indice atual da compra analisada
+        #Caso contrario, atualiza o indice atual da rota analisada
         elif(len(response) >= 2):
 
             self.routeSearchIndex = str(int(self.routeSearchIndex) - 1)
 
             #Atualiza informacoes da rota exibida/seelecionada
             self.routeReservationIndex = response[0]
-            self.routeNodeNameList = response[1]
+            self.routeNameList = response[1]
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
@@ -490,10 +497,10 @@ class User():
             else:
                 self.requestID = "1"
 
-    #Funcao para obter informacoes da compra no indice anterior
+    #Funcao para obter informacoes da rota no indice anterior
     def routeForward(self):
 
-        #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+        #Faz o conteudo da requisicao (ID do veiculo e indice atual de rota - 1)
         requestParameters = [str((int(self.routeSearchIndex)) + 1), self.destinyServerAddress]
         requestContent = [self.requestID, 'rwr', requestParameters]
 
@@ -509,7 +516,7 @@ class User():
             (add, response) = self.listenToResponse()
             retry += 1
 
-        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+        #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
         if((len(response) >= 2) and (response[0] == "-1")):
 
             #Atualiza o ID de requisicao
@@ -518,7 +525,7 @@ class User():
             else:
                 self.requestID = "1"
 
-            #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+            #Faz o conteudo da requisicao (ID do veiculo e indice atual de rota - 1)
             requestParameters = [self.routeSearchIndex, self.destinyServerAddress]
             requestContent = [self.requestID, 'rwr', requestParameters]
 
@@ -534,12 +541,12 @@ class User():
                 (add, response) = self.listenToResponse()
                 retry += 1
 
-            #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+            #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
             if(len(response) >= 2 and response[0] != "-1"):
                 
                 #Atualiza informacoes da rota exibida/seelecionada
                 self.routeReservationIndex = response[0]
-                self.routeNodeNameList = response[1]
+                self.routeNameList = response[1]
 
                 #Atualiza o ID de requisicao
                 if (int(self.requestID) < 63):
@@ -547,17 +554,73 @@ class User():
                 else:
                     self.requestID = "1"
 
-        #Caso contrario, atualiza o indice atual da compra analisada
+        #Caso contrario, atualiza o indice atual da rota analisada
         elif(len(response) >= 2):
 
             self.routeSearchIndex = str(int(self.routeSearchIndex) + 1)
 
             #Atualiza informacoes da rota exibida/seelecionada
             self.routeReservationIndex = response[0]
-            self.routeNodeNameList = response[1]
+            self.routeNameList = response[1]
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
                 self.requestID = str(int(self.requestID) + 1)
             else:
                 self.requestID = "1"
+    
+    #Funcao para adicionar um novo horario na lista de horario a agendar
+    def addReservationToList(self):
+
+        #Verifica se o horario atual e numerico, pois se for, trata-se de EPOCH
+        if(self.routeReservationTimeToAdd.isnumeric() == True):
+            
+            #Tenta primeiro adicionar o nome do no (servidor) indexado no indice atual da lista em construcao
+            #Se for bem-sucedido, adiciona tambem o horario na lista de reserva em construcao e atualiza o indice
+            try:
+
+                self.routeReservationNameList.append(self.routeNameList[self.routeReservationAddIndex])
+                self.routeReservationTimeList.append(str(int(self.routeReservationTimeToAdd)))
+                
+                self.routeReservationAddIndex += 1
+            
+            except:
+                pass
+        
+        #Se nao for, trata-se de datetime (formato DD-MM-AAAA/hh:mm)
+        else:
+
+            #Tenta obter todos os elementos da tupla datetime
+            #Se for bem-sucedido, adiciona tambem o horario na lista de reserva em construcao e atualiza o indice
+            try:
+                
+                dayPortion = int(self.routeReservationTimeToAdd[0] + self.routeReservationTimeToAdd[1])
+                monthPortion = int(self.routeReservationTimeToAdd[3] + self.routeReservationTimeToAdd[4])
+                yearPortion = int(self.routeReservationTimeToAdd[6] + self.routeReservationTimeToAdd[7] + self.routeReservationTimeToAdd[8] + self.routeReservationTimeToAdd[9])
+                hourPortion = int(self.routeReservationTimeToAdd[11] + self.routeReservationTimeToAdd[12])
+                minutePortion = int(self.routeReservationTimeToAdd[14] + self.routeReservationTimeToAdd[15])
+                
+                datetimeTime = datetime.datetime(day=dayPortion, month=monthPortion, year=yearPortion, hour=hourPortion, minute=minutePortion, second=0, tzinfo=datetime.timezone.utc)
+                epochTime = datetimeTime.timestamp()
+
+                self.routeReservationNameList.append(self.routeNameList[self.routeReservationAddIndex])
+                self.routeReservationTimeList.append(str(int(epochTime)))
+                
+                self.routeReservationAddIndex += 1
+
+            except:
+                pass
+    
+    #Funcao para remover o ultimo horario da lista de horarios para agendar
+    def removeLastReservationFromList(self):
+            
+            #Tenta remover o ultimo elemento na lista
+            try:
+
+                self.routeReservationNameList.pop()
+                self.routeReservationTimeList.pop()
+                
+                self.routeReservationAddIndex -= 1
+            
+            except:
+                pass
