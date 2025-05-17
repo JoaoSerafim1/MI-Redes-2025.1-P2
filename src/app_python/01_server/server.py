@@ -120,7 +120,7 @@ def clientRequestCatcher():
                     
                     randomIDLock.acquire()
 
-                    randomID = registerChargeStation(fileLock, randomID, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
+                    randomID = registerChargeStation(randomID, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
 
                     randomIDLock.release()
 
@@ -151,6 +151,10 @@ def clientRequestCatcher():
                 elif(requestName == 'rwr'):
 
                     respondWithRoute(fileLock, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
+                
+                elif(requestName == 'rrt'):
+
+                    reserveRoute(fileLock, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
             
             #Caso contrario, manda a resposta novamente
             else:
