@@ -30,7 +30,7 @@ class isExecutingClass():
 #Funcao para receber uma requisicao de um cliente (protocolo MQTT)
 def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, isExecutingInstance: isExecutingClass, serverIP, broker, port, timeout):
     
-    topic = serverIP
+    topic = ("req9a3fd59-" + str(serverIP))
 
     add = ("", 0)
     content = ""
@@ -43,9 +43,9 @@ def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, isEx
     def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
         setattr(client, "decodedBytes", msg.payload.decode())
         
-        #print("=============================================")
-        #print(mqttClientReceiver.decodedBytes)
-        #print("=============================================")
+        print("=============================================")
+        print(mqttClientReceiver.decodedBytes)
+        print("=============================================")
         
     mqttClientReceiver.on_message = on_message
 
@@ -101,14 +101,14 @@ def sendResponse(senderLock: threading.Lock, broker, port, serverIP, clientAddre
 
     #Obtem a string do endereco do cliente
     clientAddressString, _ = clientAddress
-    topic = clientAddressString
+    topic = ("res9a3fd59-" + str(clientAddressString))
     
     mqttMessage = [serverIP, port, response]
 
-    #print("--------------------------------------------")
-    #print(topic)
-    #print(mqttMessage)
-    #print("--------------------------------------------")
+    print("--------------------------------------------")
+    print(topic)
+    print(mqttMessage)
+    print("--------------------------------------------")
     
     senderLock.acquire()
 

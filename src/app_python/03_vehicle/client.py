@@ -10,30 +10,44 @@ from application.gui import *
 
 
 #IP do broker MQTT de teste
-testBroker = 'broker.emqx.io'
+vehicle.testBroker = 'broker.emqx.io'
 
 #Cria um dicionario dos atributos do veiculo
 dataTable = {}
 
-#Pergunta endereco do servidor
-vehicle.serverAddress = input("Insira o endereço IP do servidor: ")
-
-#Pergunta endereco do broker MQTT
-brokerCandidate = input("Insira o endereço IP do broker MQTT (OU PRESSIONE ENTER para utilizar o endereço do servidor conectado): ")
-
-if (brokerCandidate == ""):
-    vehicle.broker = vehicle.serverAddress
-
-elif (brokerCandidate == "test"):
-    vehicle.broker = testBroker
-else:
-    vehicle.broker = brokerCandidate
 
 #Verifica se o arquivo de texto "ID.txt" esta presente, e caso nao esteja...
 if (verifyFile(["vehicledata"], "ID.txt") == False):
     
+    #Pergunta o endereco do servidor
+    vehicle.serverAddress = input("Insira o endereço IP do servidor: ")
+
+    #Pergunta endereco do broker MQTT
+    vehicle.brokerCandidate = input("Insira o endereço IP do broker MQTT (OU PRESSIONE ENTER para utilizar o endereço do servidor conectado): ")
+
+    if (vehicle.brokerCandidate == ""):
+        vehicle.broker = vehicle.serverAddress
+    elif (vehicle.brokerCandidate == "test"):
+        vehicle.broker = vehicle.testBroker
+    else:
+        vehicle.broker = vehicle.brokerCandidate
+
     #Cria um novo arquivo
     writeFile(["vehicledata", "ID.txt"], vehicle.registerVehicle())
+
+#Caso contrario...
+else:
+
+    #Apenas pergunta endereco do broker MQTT
+    vehicle.brokerCandidate = input("Insira o endereço IP do broker MQTT (OU PRESSIONE ENTER para utilizar o endereço do servidor conectado): ")
+
+    if (vehicle.brokerCandidate == ""):
+        vehicle.broker = vehicle.serverAddress
+    elif (vehicle.brokerCandidate == "test"):
+        vehicle.broker = vehicle.testBroker
+    else:
+        vehicle.broker = vehicle.brokerCandidate
+
 
 #Verifica se o arquivo de texto "vehicle_data.json" esta presente, e caso nao esteja...
 if (verifyFile(["vehicledata"], "vehicle_data.json") == False):

@@ -133,7 +133,7 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
 
         #Caso o ID do veiculo/estacao fornecidos sejam validos e a compra seja confirmada
         if ((stationVerify == True) and (len(stationID) == 24) and (len(vehicleID) == 24) and confirmPurchase(purchaseID) == True):
-
+            
             zeroBookingConflicts = True
             purchaseDone = False
 
@@ -142,96 +142,105 @@ def attemptCharge(fileLock: threading.Lock, senderLock: threading.Lock, broker, 
             #Obtem o tempo atual, para verificar informacao de agendamento
             actualTime = int(time.time())
 
-            #Carrega o dicionario de informacoes da estacao a ser agendada
-            stationInfo = readFile(["clientdata", "clients", "stations", stationFileName])
+            try:
+                #Carrega o dicionario de informacoes da estacao a ser agendada
+                stationInfo = readFile(["clientdata", "clients", "stations", stationFileName])
 
-            for actualBookedVehicleID in stationInfo["vehicle_bookings"]:
-                
-                #Tempo atual agendado para a entrada na lista (chave=id do veiculo)
-                bookedTime = stationInfo["vehicle_bookings"][actualBookedVehicleID]
-
-                #Se a entrada na agenda nao for do veiculo solicitante e a janela de tempo do agendamento (2 horas antes e depois do horario exato marcado) contemplar o tempo atual, nao podera haver recarga
-                if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (actualTime > (bookedTime - timeWindow))) and (actualTime < (bookedTime + timeWindow))):
+                for actualBookedVehicleID in stationInfo["vehicle_bookings"]:
                     
-                    zeroBookingConflicts = False
+                    #Tempo atual agendado para a entrada na lista (chave=id do veiculo)
+                    bookedTime = stationInfo["vehicle_bookings"][actualBookedVehicleID]
 
-            #Caso o ponto de carga esteja disponivel para a operacao (nenhum veiculo recarregando e a janela de agendamento esta livre)
-            if ((stationInfo["actual_vehicle"] == "") and (zeroBookingConflicts == True)):
+                    #Se a entrada na agenda nao for do veiculo solicitante e a janela de tempo do agendamento (2 horas antes e depois do horario exato marcado) contemplar o tempo atual, nao podera haver recarga
+                    if ((zeroBookingConflicts == True) and (vehicleID != actualBookedVehicleID and (actualTime > (bookedTime - timeWindow))) and (actualTime < (bookedTime + timeWindow))):
+                        
+                        zeroBookingConflicts = False
 
-                #Nome do arquivo da compra
-                purchaseFileName = (purchaseID + ".json")
+                #Caso o ponto de carga esteja disponivel para a operacao (nenhum veiculo recarregando e a janela de agendamento esta livre)
+                if ((stationInfo["actual_vehicle"] == "") and (zeroBookingConflicts == True)):
 
-                chargeAmount = str((float(paidAmmount))/float(stationInfo["unitary_price"]))
+                    #Nome do arquivo da compra
+                    purchaseFileName = (purchaseID + ".json")
 
-                #Cria um dicionario das informacoes da compra, adiciona informacoes e grava um arquivo
-                purchaseTable = {}
-                purchaseTable["vehicle_ID"] = vehicleID
-                purchaseTable["station_ID"] = stationID
-                purchaseTable["total"] = paidAmmount
-                purchaseTable["unitary_price"] = stationInfo["unitary_price"]
-                purchaseTable["charge_amount"] = chargeAmount
+                    chargeAmount = str((float(paidAmmount))/float(stationInfo["unitary_price"]))
 
-                vehicleInfo = {}
+                    #Cria um dicionario das informacoes da compra, adiciona informacoes e grava um arquivo
+                    purchaseTable = {}
+                    purchaseTable["vehicle_ID"] = vehicleID
+                    purchaseTable["station_ID"] = stationID
+                    purchaseTable["total"] = paidAmmount
+                    purchaseTable["unitary_price"] = stationInfo["unitary_price"]
+                    purchaseTable["charge_amount"] = chargeAmount
 
-                #Carrega o dicionario de informacoes do veiculo, se possivel
-                if (verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName) == True):
+                    vehicleInfo = {}
+
+                    #Carrega o dicionario de informacoes do veiculo, se possivel
+                    if (verifyFile(["clientdata", "clients", "vehicles"], vehicleFileName) == True):
+                        
+                        vehicleInfo = readFile(["clientdata", "clients", "vehicles", vehicleFileName])
                     
-                    vehicleInfo = readFile(["clientdata", "clients", "vehicles", vehicleFileName])
-                
-                else:
+                    else:
 
-                    vehicleInfo["purchases"] = []
+                        vehicleInfo["purchases"] = []
 
-                #Adiciona a compra a lista de compras do veiculo (cliente) e grava o resultado
-                vehicleInfo["purchases"].append(purchaseID)
+                    #Adiciona a compra a lista de compras do veiculo (cliente) e grava o resultado
+                    vehicleInfo["purchases"].append(purchaseID)
 
-                #Modifica o veiculo atual na estacao de carga e grava o resultado
-                stationInfo["actual_vehicle"] = vehicleID
-                stationInfo["remaining_charge"] = chargeAmount
+                    #Modifica o veiculo atual na estacao de carga e grava o resultado
+                    stationInfo["actual_vehicle"] = vehicleID
+                    stationInfo["remaining_charge"] = chargeAmount
 
-                #Grava o resultado das acoes
-                writeFile(["clientdata", "purchases", purchaseFileName], purchaseTable)
-                writeFile(["clientdata", "clients", "vehicles", vehicleFileName], vehicleInfo)
-                writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
+                    #Grava o resultado das acoes
+                    writeFile(["clientdata", "purchases", purchaseFileName], purchaseTable)
+                    writeFile(["clientdata", "clients", "vehicles", vehicleFileName], vehicleInfo)
+                    writeFile(["clientdata", "clients", "stations", stationFileName], stationInfo)
 
-                #Adquire uma lista com o nome dos arquivos de todas as estacoes
-                stationList = listFiles(["clientdata", "clients", "stations"])
+                    #Adquire uma lista com o nome dos arquivos de todas as estacoes
+                    stationList = listFiles(["clientdata", "clients", "stations"])
+                    
+                    #Loop que percorre a lista de estacoes de carga
+                    for stationIndex in range(0, len(stationList)):
+                        
+                        #Nome do arquivo
+                        actualStationFileName = stationList[stationIndex]
+                        
+                        try:
 
-                #Loop que percorre a lista de estacoes de carga
-                for stationIndex in range(0, len(stationList)):
+                            #Carrega as informacoes da estacao atual (falha caso o arquivo nao seja valido para carregar)
+                            actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
+                            
+                            try:
+                                
+                                #Tenta remover a entrada com o ID do veiculo solicitante da lista de agendamento, pois o mesmo acabou de iniciar o processo de recarga
+                                del actualStationTable["vehicle_bookings"][vehicleID]
+                                
+                                #Grava o resultado da acao
+                                writeFile(["clientdata", "clients", "stations", actualStationFileName], actualStationTable)
+                                
+                            except:
+                                pass
+                        except:
+                            pass
 
-                    #Nome do arquivo
-                    actualStationFileName = stationList[stationIndex]
-
-                    #Carrega as informacoes da estacao atual
-                    actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
-
-                    try:
-                        #Tenta remover a entrada com o ID do veiculo solicitante da lista de agendamento, pois o mesmo acabou de iniciar o processo de recarga
-                        del actualStationTable["vehicle_bookings"][vehicleID]
-
-                        #Grava o resultado da acao
-                        writeFile(["clientdata", "clients", "stations", actualStationFileName], actualStationTable)
-                    except:
-                        pass
-
-                #Marca a compra como feita
-                purchaseDone = True
+                    #Marca a compra como feita
+                    purchaseDone = True
+            except:
+                pass
 
             fileLock.release()
-
+            
             #Caso a compra seja feita
             if (purchaseDone == True):
-
+                
                 #Grava o status da requisicao (mesmo conteudo da mensagem enviada como resposta)
                 registerRequestResult(fileLock, vehicleAddress, requestID, 'OK')
-
+                
                 #Registra no log
                 registerLogEntry(fileLock, ["logs", "performed"], "PHCCHARGE", "P_ID", purchaseID)
                 
                 #Envia mensagem de resposta ao veiculo
                 sendResponse(senderLock, broker, port, serverIP, vehicleAddress, 'OK')
-
+                
             else:
                 
                 #Caso contrario (slot de carga ocupado durante a compra), cancela a compra

@@ -33,7 +33,7 @@ class Station():
 
         global broker
         port = 1883
-        topic = serverAddress
+        topic = ("req9a3fd59-" + str(serverAddress))
         
         mqttMessage = [self.clientIP, port, request]
 
@@ -62,7 +62,7 @@ class Station():
 
         global broker
         port = 1883
-        topic = self.clientIP
+        topic = ("res9a3fd59-" + str(self.clientIP))
 
         add = ("", 0)
         response = ""

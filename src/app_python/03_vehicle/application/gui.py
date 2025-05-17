@@ -12,6 +12,7 @@ vehicle = User()
 ctk_frame_main = ctk.CTk()
 
 #Inicializacao de Stringvars
+strvar_vehicle_ID = ctk.StringVar()
 strvar_battery_info = ctk.StringVar()
 strvar_autonomy_info = ctk.StringVar()
 strvar_critical_battery_warning = ctk.StringVar()
@@ -24,10 +25,10 @@ strvar_purchase_history_price = ctk.StringVar()
 strvar_purchase_history_charge = ctk.StringVar()
 strvar_route_node_list = ctk.StringVar()
 strvar_route_time_list = ctk.StringVar()
-strvar_route_selection_result = ctk.StringVar()
+strvar_route_reservation_result = ctk.StringVar()
 
 #id do veiculo
-label_user_ID = ctk.CTkLabel(ctk_frame_main,text=("" + vehicle.ID + " ")) # type: ignore
+label_user_ID = ctk.CTkLabel(ctk_frame_main,textvariable=strvar_vehicle_ID) # type: ignore
 
 #Elementos graficos de status do veiculo
 label_battery_info = ctk.CTkLabel(ctk_frame_main,textvariable=strvar_battery_info)
@@ -35,7 +36,7 @@ label_autonomy_info = ctk.CTkLabel(ctk_frame_main,textvariable=strvar_autonomy_i
 label_critical_battery_warning = ctk.CTkLabel(ctk_frame_main,textvariable=strvar_critical_battery_warning)
 
 #Caixa de entrada do endereço do servidor local (que tambem e origem de uma rota)
-box_local_server_address = ctk.CTkEntry(ctk_frame_main,placeholder_text=' insira o endereço do servidor local ',width=180)
+box_local_server_address = ctk.CTkEntry(ctk_frame_main,placeholder_text=' insira o endereço do servidor local ',width=240)
 
 
 def closeAny(frame):
@@ -46,7 +47,7 @@ def closeAny(frame):
 def openRechargeManager():
 
     frame4 = ctk.CTkToplevel(ctk_frame_main) 
-    frame4.title('Gerenciar Recarga')
+    frame4.title('Gerenciador de Recarga')
     frame4.geometry('600x800')
     frame4.attributes('-topmost',True)
 
@@ -79,9 +80,12 @@ def openRouteManager():
     frame2.geometry('600x800')
     frame2.attributes('-topmost',True)
     
-    destinationPlaceholder = ctk.CTkEntry(frame2,placeholder_text=' digite o servidor de destino ',width=180)
-    destinationPlaceholder.pack(pady=10)
+    box_destination_server_address = ctk.CTkEntry(frame2,placeholder_text=' digite o servidor de destino ',width=200)
+    box_destination_server_address.pack(pady=10)
 
+    label_actual_node_list = ctk.CTkLabel(frame2, textvariable= strvar_route_node_list)
+    label_actual_node_list.pack(pady=10)
+    
     #comandos a serem definidos
     backButton = ctk.CTkButton(frame2,text=' < ')
     backButton.pack(pady=5)
@@ -92,10 +96,10 @@ def openRouteManager():
     selectRouteButton = ctk.CTkButton(frame2,text=' REQUISITAR RESERVA NA ROTA ')
     selectRouteButton.pack(pady=5)
 
-    route_selection_Result = ctk.CTkLabel(frame2,textvariable=strvar_route_selection_result)
+    route_selection_Result = ctk.CTkLabel(frame2,textvariable=strvar_route_reservation_result)
     route_selection_Result.pack(pady=30)
 
-button_open_route_manager = ctk.CTkButton(ctk_frame_main,text=' VER ROTAS PARA O DESTINO ',command=openRouteManager)
+button_open_route_manager = ctk.CTkButton(ctk_frame_main,text=' ABRIR MENU DE RESERVAS ',command=openRouteManager)
 
 
 #frame3 = histórico
@@ -144,13 +148,32 @@ def infoUpdate():
         vehicle.capacity = loadedTable["capacity"]
         vehicle.autonomy = loadedTable["autonomy"]
 
+        #Atualiza label do ID do veiculo
+        strvar_vehicle_ID.set(" " + vehicle.ID + " ")
+
+        #Atualiza label de autonomia do veiculo
+        strvar_autonomy_info.set(" Autonomia: " + vehicle.autonomy + " Km ")
+
         #Atualiza label de texto do nivel da bateria e do aviso de bateria critica (menos de 30 porcento)
         strvar_battery_info.set(" Carga: " + str(float(vehicle.battery_level) * 100) + "% => " + str(float(vehicle.capacity) * float(vehicle.battery_level)) + "/" + str(vehicle.capacity) + " KWh ")
         if (float(vehicle.battery_level) < 0.3):
             strvar_critical_battery_warning.set(" BATERIA EM NÍVEL CRÍTICO! ")
         else:
             strvar_critical_battery_warning.set(" BATERIA NORMAL ")
+
+        #Atualiza endereco do servidor de acordo com a entrada do usuario
+        vehicle.serverAddress = box_local_server_address.get()
         
+        #Atualiza o endereco do broker de acordo com a entrada inicial e com o endereco atual do servidor
+        if (vehicle.brokerCandidate == ""):
+            vehicle.broker = vehicle.serverAddress
+        elif (vehicle.brokerCandidate == "test"):
+            vehicle.broker = vehicle.testBroker
+        else:
+            vehicle.broker = vehicle.brokerCandidate
+        
+        
+        #INFORMACOES DA JANELA DE CARREGAMENTO
         #Atualiza label de texto de informacao da distancia
         if (vehicle.nearestStationID != ""):
             strvar_distance_info.set((" DISTANCIA: " + vehicle.nearestStationDistance + " Km | Preço do KWh: " + vehicle.nearestStationPrice + " "))
@@ -163,6 +186,17 @@ def infoUpdate():
         else:
             strvar_next_purchase_info.set(" Não existe compra esperando confirmação. ")
 
+
+        #INFORMACOES DA JANELA DE ROTAS
+        #Atualiza texto de retorno dos nos da rota atual
+        strvar_route_node_list.set(json.dumps(vehicle.routeNodeNameList))
+        #Atualiza texto indicativo da lista de horarios em construcao
+        strvar_route_time_list.set(json.dumps(vehicle.routeReservationTimeList))
+        #Atualiza texto de informacao da ultima tentativa de reserva de rota
+        strvar_route_reservation_result.set(json.dumps(vehicle.routeReservationResult))
+
+        
+        #INFORMACOES DA JANELA DE HISTORICO DE COMPRAS
         #Atualiza texto de informacao da ultima compra realizada
         strvar_next_purchase_result.set(vehicle.purchaseResult)
 

@@ -28,6 +28,9 @@ class User():
 
         self.serverAddress = ""
         self.broker = ""
+        
+        self.brokerCandidate = ""
+        self.testBroker = ""
 
         self.requestID = "0"
 
@@ -43,6 +46,7 @@ class User():
         self.routeReservationIndex = "0"
         self.routeNodeNameList = []
         self.routeReservationTimeList = []
+        self.routeReservationResult = ""
 
         self.historyPurchaseIndex = "0"
         self.historyPurchaseID = "0"
@@ -54,15 +58,15 @@ class User():
     def sendRequest(self, request):
         
         port = 1883
-        topic = self.serverAddress
+        topic = ("req9a3fd59-" + str(self.serverAddress))
         
         mqttMessage = [self.clientIP, port, request]
 
-        #print("--------------------------------------------")
-        #print(str(self.broker) + " : " + str(port))
-        #print(topic)
-        #print(mqttMessage)
-        #print("--------------------------------------------")
+        print("--------------------------------------------")
+        print(str(self.broker) + " : " + str(port))
+        print(topic)
+        print(mqttMessage)
+        print("--------------------------------------------")
         
         try:
             #Serializa a resposta utilizando json
@@ -83,7 +87,7 @@ class User():
         global decodedBytes
 
         port = 1883
-        topic = self.clientIP
+        topic = ("res9a3fd59-" + str(self.clientIP))
 
         add = ("", 0)
         response = ""
@@ -119,18 +123,15 @@ class User():
         except:
             pass
 
-        byteCopy = ("" + decodedBytes)
-        decodedBytes = ""
-
-        #print("=============================================")
-        #print(str(self.broker) + " : " + str(port))
-        #print(topic)
-        #print(decodedBytes)
-        #print("=============================================")
+        print("=============================================")
+        print(str(self.broker) + " : " + str(port))
+        print(topic)
+        print(decodedBytes)
+        print("=============================================")
         
         try:
             #De-serializa a mensagem decodificada 
-            unserializedObj = json.loads(byteCopy)
+            unserializedObj = json.loads(decodedBytes)
 
             #Se uma resposta valida foi recebida, a mensagem deve ter tamanho 3
             if (len(unserializedObj) == 3):
@@ -201,14 +202,14 @@ class User():
         if (len(response) < 1):
             
             self.nearestStationID = ""
-            self.nearestStationDistance = " SERVIDOR INDISPONÍVEL "
+            self.nearestStationDistance = " Servidor indisponível. "
             self.nearestStationPrice = ""
         
         #Se receber resposta com campo do ID da estacao vazio, nenhum estacao foi encontrada (disponivel)
         elif (response[0] == "0"):
             
             self.nearestStationID = ""
-            self.nearestStationDistance = " NENHUMA ESTAÇÃO DISPONÍVEL ENCONTRADA "
+            self.nearestStationDistance = " Nenhuma estação disponível encontrada. "
             self.nearestStationPrice = ""
         
         #Caso contrario, atualiza as informacoes de acordo com o retorno (informacoes da estacao mais proxima)
@@ -311,7 +312,7 @@ class User():
         else:
 
             self.historyPurchaseIndex = str(int(self.historyPurchaseIndex) - 1)
-        
+
         #Atualiza informacoes da compra exibida
         self.historyPurchaseID = response[0]
         self.historyPurchaseTotal = response[1]
