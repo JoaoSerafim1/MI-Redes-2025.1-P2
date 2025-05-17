@@ -228,6 +228,36 @@ if [ $1 = 'control' ]; then
     fi
 fi
 
+if [ $1 = 'dumptest' ]; then
+    
+    docker container cp ./files_test/server_01/clientdata charge_server_01:/python_redes/01_server
+    docker container cp ./files_test/server_01/serverdata charge_server_01:/python_redes/01_server
+    docker container cp ./files_test/server_01/logs charge_server_01:/python_redes/01_server
+    docker container cp ./files_test/server_02/clientdata charge_server_02:/python_redes/01_server
+    docker container cp ./files_test/server_02/serverdata charge_server_02:/python_redes/01_server
+    docker container cp ./files_test/server_02/logs charge_server_02:/python_redes/01_server
+    docker container cp ./files_test/server_03/clientdata charge_server_03:/python_redes/01_server
+    docker container cp ./files_test/server_03/serverdata charge_server_03:/python_redes/01_server
+    docker container cp ./files_test/server_03/logs charge_server_03:/python_redes/01_server
+    docker container cp ./files_test/server_04/clientdata charge_server_04:/python_redes/01_server
+    docker container cp ./files_test/server_04/serverdata charge_server_04:/python_redes/01_server
+    docker container cp ./files_test/server_04/logs charge_server_04:/python_redes/01_server
+    docker container cp ./files_test/station_01/stationdata charge_station_01:/python_redes/02_station
+    docker container cp ./files_test/station_02/stationdata charge_station_02:/python_redes/02_station
+    docker container cp ./files_test/station_03/stationdata charge_station_03:/python_redes/02_station
+    docker container cp ./files_test/station_04/stationdata charge_station_04:/python_redes/02_station
+    docker container cp ./files_test/station_05/stationdata charge_station_05:/python_redes/02_station
+    docker container cp ./files_test/station_06/stationdata charge_station_06:/python_redes/02_station
+    docker container cp ./files_test/station_07/stationdata charge_station_07:/python_redes/02_station
+    docker container cp ./files_test/station_08/stationdata charge_station_08:/python_redes/02_station
+    docker container cp ./files_test/station_09/stationdata charge_station_09:/python_redes/02_station
+    docker container cp ./files_test/station_10/stationdata charge_station_10:/python_redes/02_station
+    docker container cp ./files_test/vehicle_01/vehicledata electric_vehicle_01:/python_redes/03_vehicle
+    docker container cp ./files_test/vehicle_02/vehicledata electric_vehicle_02:/python_redes/03_vehicle
+    docker container cp ./files_test/vehicle_03/vehicledata electric_vehicle_03:/python_redes/03_vehicle
+    docker container cp ./files_test/vehicle_04/vehicledata electric_vehicle_04:/python_redes/03_vehicle
+fi
+
 if [ $1 = 'import' ]; then
     
     docker container cp charge_server_01:/python_redes/01_server/clientdata ./files/imported/server_01
