@@ -42,6 +42,7 @@ class User():
         self.nextAmountToPay = ""
         self.purchaseResult = ""
 
+        self.destinyServerAddress = ""
         self.routeSearchIndex = "0"
         self.routeReservationIndex = "0"
         self.routeNodeNameList = []
@@ -62,11 +63,11 @@ class User():
         
         mqttMessage = [self.clientIP, port, request]
 
-        print("--------------------------------------------")
-        print(str(self.broker) + " : " + str(port))
-        print(topic)
-        print(mqttMessage)
-        print("--------------------------------------------")
+        #print("--------------------------------------------")
+        #print(str(self.broker) + " : " + str(port))
+        #print(topic)
+        #print(mqttMessage)
+        #print("--------------------------------------------")
         
         try:
             #Serializa a resposta utilizando json
@@ -123,11 +124,11 @@ class User():
         except:
             pass
 
-        print("=============================================")
-        print(str(self.broker) + " : " + str(port))
-        print(topic)
-        print(decodedBytes)
-        print("=============================================")
+        #print("=============================================")
+        #print(str(self.broker) + " : " + str(port))
+        #print(topic)
+        #print(decodedBytes)
+        #print("=============================================")
         
         try:
             #De-serializa a mensagem decodificada 
@@ -262,6 +263,7 @@ class User():
             #Zera o ID da proxima compra
             self.nextPurchaseID = ""
     
+
     #Funcao para obter informacoes da compra no indice anterior
     def purchaseBackward(self):
 
@@ -273,20 +275,22 @@ class User():
         self.sendRequest(requestContent)
         (add, response) = self.listenToResponse()
 
-        #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-        while(response == ""):
+        retry = 0
+        #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
+        while((response == "") and (retry < 3)):
 
             self.sendRequest(requestContent)
             (add, response) = self.listenToResponse()
-
-        #Atualiza o ID de requisicao
-        if (int(self.requestID) < 63):
-            self.requestID = str(int(self.requestID) + 1)
-        else:
-            self.requestID = "1"
+            retry += 1
 
         #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
-        if(response[0] == "0"):
+        if((len(response) >= 4) and (response[0] == "0")):
+
+            #Atualiza o ID de requisicao
+            if (int(self.requestID) < 63):
+                self.requestID = str(int(self.requestID) + 1)
+            else:
+                self.requestID = "1"
 
             #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra)
             requestParameters = [self.ID, str(self.historyPurchaseIndex)]
@@ -296,11 +300,39 @@ class User():
             self.sendRequest(requestContent)
             (add, response) = self.listenToResponse()
 
+            retry = 0
             #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-            while(response == ""):
+            while((response == True) and (retry < 3)):
 
                 self.sendRequest(requestContent)
                 (add, response) = self.listenToResponse()
+                retry += 1
+
+            #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+            if(len(response) >= 4 and response[0] != "0"):
+                
+                #Atualiza informacoes da compra exibida
+                self.historyPurchaseID = response[0]
+                self.historyPurchaseTotal = response[1]
+                self.historyPurchasePrice = response[2]
+                self.historyPurchaseCharge = response[3]
+
+                #Atualiza o ID de requisicao
+                if (int(self.requestID) < 63):
+                    self.requestID = str(int(self.requestID) + 1)
+                else:
+                    self.requestID = "1"
+
+        #Caso contrario, atualiza o indice atual da compra analisada
+        elif(len(response) >= 4):
+
+            self.historyPurchaseIndex = str(int(self.historyPurchaseIndex) - 1)
+
+            #Atualiza informacoes da compra exibida
+            self.historyPurchaseID = response[0]
+            self.historyPurchaseTotal = response[1]
+            self.historyPurchasePrice = response[2]
+            self.historyPurchaseCharge = response[3]
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
@@ -308,21 +340,11 @@ class User():
             else:
                 self.requestID = "1"
 
-        #Caso contrario, atualiza o indice atual da compra analisada
-        else:
-
-            self.historyPurchaseIndex = str(int(self.historyPurchaseIndex) - 1)
-
-        #Atualiza informacoes da compra exibida
-        self.historyPurchaseID = response[0]
-        self.historyPurchaseTotal = response[1]
-        self.historyPurchasePrice = response[2]
-        self.historyPurchaseCharge = response[3]
     
     #Funcao para obter informacoes da compra no indice a seguir
     def purchaseForward(self):
 
-        #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra + 1)
+        #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
         requestParameters = [self.ID, str(int(self.historyPurchaseIndex) + 1)]
         requestContent = [self.requestID, 'gpr', requestParameters]
 
@@ -330,20 +352,22 @@ class User():
         self.sendRequest(requestContent)
         (add, response) = self.listenToResponse()
 
-        #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-        while(response == ""):
+        retry = 0
+        #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
+        while((response == True) and (retry < 3)):
 
             self.sendRequest(requestContent)
             (add, response) = self.listenToResponse()
-
-        #Atualiza o ID de requisicao
-        if (int(self.requestID) < 63):
-            self.requestID = str(int(self.requestID) + 1)
-        else:
-            self.requestID = "1"
+            retry += 1
 
         #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
-        if(response[0] == "0"):
+        if((len(response) >= 4) and (response[0] == "0")):
+
+            #Atualiza o ID de requisicao
+            if (int(self.requestID) < 63):
+                self.requestID = str(int(self.requestID) + 1)
+            else:
+                self.requestID = "1"
 
             #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra)
             requestParameters = [self.ID, str(self.historyPurchaseIndex)]
@@ -353,11 +377,39 @@ class User():
             self.sendRequest(requestContent)
             (add, response) = self.listenToResponse()
 
+            retry = 0
             #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-            while(response == ""):
+            while((response == True) and (retry < 3)):
 
                 self.sendRequest(requestContent)
                 (add, response) = self.listenToResponse()
+                retry += 1
+
+            #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+            if(len(response) >= 4 and response[0] != "0"):
+                
+                #Atualiza informacoes da compra exibida
+                self.historyPurchaseID = response[0]
+                self.historyPurchaseTotal = response[1]
+                self.historyPurchasePrice = response[2]
+                self.historyPurchaseCharge = response[3]
+
+                #Atualiza o ID de requisicao
+                if (int(self.requestID) < 63):
+                    self.requestID = str(int(self.requestID) + 1)
+                else:
+                    self.requestID = "1"
+
+        #Caso contrario, atualiza o indice atual da compra analisada
+        elif(len(response) >= 4):
+
+            self.historyPurchaseIndex = str(int(self.historyPurchaseIndex) + 1)
+
+            #Atualiza informacoes da compra exibida
+            self.historyPurchaseID = response[0]
+            self.historyPurchaseTotal = response[1]
+            self.historyPurchasePrice = response[2]
+            self.historyPurchaseCharge = response[3]
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
@@ -365,13 +417,147 @@ class User():
             else:
                 self.requestID = "1"
 
-        #Caso contrario, atualiza o indice atual da compra analisada
-        else:
 
-            self.historyPurchaseIndex = str(int(self.historyPurchaseIndex) + 1)
-        
-        #Atualiza informacoes da compra exibida
-        self.historyPurchaseID = response[0]
-        self.historyPurchaseTotal = response[1]
-        self.historyPurchasePrice = response[2]
-        self.historyPurchaseCharge = response[3]
+    #Funcao para obter informacoes da compra no indice anterior
+    def routeBackward(self):
+
+        #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+        requestParameters = [str((int(self.routeSearchIndex)) - 1), self.destinyServerAddress]
+        requestContent = [self.requestID, 'rwr', requestParameters]
+
+        #Envia a requisicao
+        self.sendRequest(requestContent)
+        (add, response) = self.listenToResponse()
+
+        retry = 0
+        #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
+        while((response == True) and (retry < 3)):
+
+            self.sendRequest(requestContent)
+            (add, response) = self.listenToResponse()
+            retry += 1
+
+        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+        if((len(response) >= 2) and (response[0] == "-1")):
+
+            #Atualiza o ID de requisicao
+            if (int(self.requestID) < 63):
+                self.requestID = str(int(self.requestID) + 1)
+            else:
+                self.requestID = "1"
+
+            #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+            requestParameters = [self.routeSearchIndex, self.destinyServerAddress]
+            requestContent = [self.requestID, 'rwr', requestParameters]
+
+            #Envia a requisicao
+            self.sendRequest(requestContent)
+            (add, response) = self.listenToResponse()
+
+            retry = 0
+            #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
+            while((response == True) and (retry < 3)):
+
+                self.sendRequest(requestContent)
+                (add, response) = self.listenToResponse()
+                retry += 1
+
+            #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+            if(len(response) >= 2 and response[0] != "-1"):
+                
+                #Atualiza informacoes da rota exibida/seelecionada
+                self.routeReservationIndex = response[0]
+                self.routeNodeNameList = response[1]
+
+                #Atualiza o ID de requisicao
+                if (int(self.requestID) < 63):
+                    self.requestID = str(int(self.requestID) + 1)
+                else:
+                    self.requestID = "1"
+
+        #Caso contrario, atualiza o indice atual da compra analisada
+        elif(len(response) >= 2):
+
+            self.routeSearchIndex = str(int(self.routeSearchIndex) - 1)
+
+            #Atualiza informacoes da rota exibida/seelecionada
+            self.routeReservationIndex = response[0]
+            self.routeNodeNameList = response[1]
+
+            #Atualiza o ID de requisicao
+            if (int(self.requestID) < 63):
+                self.requestID = str(int(self.requestID) + 1)
+            else:
+                self.requestID = "1"
+
+    #Funcao para obter informacoes da compra no indice anterior
+    def routeForward(self):
+
+        #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+        requestParameters = [str((int(self.routeSearchIndex)) + 1), self.destinyServerAddress]
+        requestContent = [self.requestID, 'rwr', requestParameters]
+
+        #Envia a requisicao
+        self.sendRequest(requestContent)
+        (add, response) = self.listenToResponse()
+
+        retry = 0
+        #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
+        while((response == True) and (retry < 3)):
+
+            self.sendRequest(requestContent)
+            (add, response) = self.listenToResponse()
+            retry += 1
+
+        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+        if((len(response) >= 2) and (response[0] == "-1")):
+
+            #Atualiza o ID de requisicao
+            if (int(self.requestID) < 63):
+                self.requestID = str(int(self.requestID) + 1)
+            else:
+                self.requestID = "1"
+
+            #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra - 1)
+            requestParameters = [self.routeSearchIndex, self.destinyServerAddress]
+            requestContent = [self.requestID, 'rwr', requestParameters]
+
+            #Envia a requisicao
+            self.sendRequest(requestContent)
+            (add, response) = self.listenToResponse()
+
+            retry = 0
+            #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
+            while((response == True) and (retry < 3)):
+
+                self.sendRequest(requestContent)
+                (add, response) = self.listenToResponse()
+                retry += 1
+
+            #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+            if(len(response) >= 2 and response[0] != "-1"):
+                
+                #Atualiza informacoes da rota exibida/seelecionada
+                self.routeReservationIndex = response[0]
+                self.routeNodeNameList = response[1]
+
+                #Atualiza o ID de requisicao
+                if (int(self.requestID) < 63):
+                    self.requestID = str(int(self.requestID) + 1)
+                else:
+                    self.requestID = "1"
+
+        #Caso contrario, atualiza o indice atual da compra analisada
+        elif(len(response) >= 2):
+
+            self.routeSearchIndex = str(int(self.routeSearchIndex) + 1)
+
+            #Atualiza informacoes da rota exibida/seelecionada
+            self.routeReservationIndex = response[0]
+            self.routeNodeNameList = response[1]
+
+            #Atualiza o ID de requisicao
+            if (int(self.requestID) < 63):
+                self.requestID = str(int(self.requestID) + 1)
+            else:
+                self.requestID = "1"

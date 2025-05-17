@@ -147,6 +147,10 @@ def clientRequestCatcher():
                 elif(requestName == 'gpr'):
 
                     respondWithPurchase(fileLock, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
+                
+                elif(requestName == 'rwr'):
+
+                    respondWithRoute(fileLock, senderLock, broker, mqttPort, localServerIP, requestID, clientAddress, requestParameters)
             
             #Caso contrario, manda a resposta novamente
             else:

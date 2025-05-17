@@ -21,75 +21,74 @@ from application.rest import *
 def respondWithRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverAddress, requestID, vehicleAddress, requestParameters):
 
     #Informacoes iniciais da mensagem de resposta
-    serverRouteIndex = (-1)
+    serverRouteIndex = "-1"
     routeNodeNameList = []
 
     #Se estiver no formato adequado
     try:
         
         routeIndex = requestParameters[0]
-        routeStartAddress = requestParameters[1]
-        routeEndAddress = requestParameters[2]
+        routeEndAddress = str(requestParameters[1])
 
-        #Se o indice e numerico
-        if((routeIndex.isnumeric() == True)):
+        #Se o indice e numerico e o endereco de destino maior que 1
+        if((routeIndex.isnumeric() == True) and (len(routeEndAddress) > 0)):
+
+            routeIndex = int(routeIndex)
             
             #Le o arquivo do veiculo com o ID especificado
             fileLock.acquire()
             routeInfo = readFile(["serverdata", "routes.json"])
             fileLock.release()
-
+            
             validRouteCount = 0 
             
             #Loop que percorre a lista de rotas
             for routeCount in range(0, len(routeInfo)):
                 
                 actualRoute = routeInfo[routeCount]
-
-                actualRouteStartNode = actualRoute[0]
+                
                 actualRouteEndNode = actualRoute[(-1)]
-
-                actualRouteStartAddress, _ = actualRouteStartNode
-                actualRouteEndAddress, _ = actualRouteEndNode
-
+                
+                actualRouteEndAddress = actualRouteEndNode[0]
+                
                 #Se a origem e o destino da rota correspondem ao desejado
-                if ((routeStartAddress == actualRouteStartAddress) and (routeEndAddress == actualRouteEndAddress)):
-
+                if (routeEndAddress == actualRouteEndAddress):
+                    
                     #Se o indice tambem for igual ao contador de rotas validas
                     if(routeIndex == validRouteCount):
                         
                         #O indice da rota como visto no servidor a ser retornado ao cliente para uso posterior
-                        serverRouteIndex = routeCount
-
+                        serverRouteIndex = str(routeCount)
+                        
                         #Percorre os nos da rota
                         for nodeCount in range(0, len(actualRoute)):
                             
                             actualRouteNode = actualRoute[nodeCount]
-                            _, actualNodeName = actualRouteNode
-
+                            actualNodeName = actualRouteNode[1]
+                            
                             #Adiciona o nome do servidor do no atual na lista de nomes de nos (elemento visual da rota)
                             routeNodeNameList.append(actualNodeName)
-
+                            
                     #Caso contrario
                     else:
-
+                        
                         #Aumenta o contador de rotas validas, para chegar ao indice requisitado
                         validRouteCount += 1
     except:
         pass
-
+    
     #Grava o status da requisicao (mesmo conteudo da mensagem enviada como resposta)
     registerRequestResult(fileLock, vehicleAddress, requestID, [serverRouteIndex, routeNodeNameList])
-
+    
     #Separa a string do endereco IP do veiculo
     vehicleAddressString, _ = vehicleAddress
-
+    
     #Registra no log
-    registerLogEntry(["logs", "performed"], "RTDETAILS", "V_ADD", vehicleAddressString)
-
+    registerLogEntry(fileLock, ["logs", "performed"], "RTDETAILS", "V_ADD", vehicleAddressString)
+    
     #Responde o status da requisicao para o cliente
     sendResponse(senderLock, broker, port, serverAddress, vehicleAddress, [serverRouteIndex, routeNodeNameList])
-
+    
 #Funcao para reservar uma rota
 def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, port, serverAddress, vehicleRequestID, vehicleAddress, requestParameters):
     
@@ -216,7 +215,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
     vehicleAddressString, _ = vehicleAddress
 
     #Registra no log
-    registerLogEntry(["logs", "performed"], "RESROUTE", "V_ADD", vehicleAddressString)
+    registerLogEntry(fileLock, ["logs", "performed"], "RESROUTE", "V_ADD", vehicleAddressString)
 
     #Responde o status da requisicao para o cliente
     sendResponse(senderLock, broker, port, serverAddress, vehicleAddress, response)

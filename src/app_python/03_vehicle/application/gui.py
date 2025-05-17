@@ -1,3 +1,7 @@
+#Importa bibliotecas basicas do python
+import json
+import threading
+
 #Importa customTkinter
 import customtkinter as ctk
 
@@ -10,6 +14,7 @@ vehicle = User()
 
 #Frame1 = Janela principal
 ctk_frame_main = ctk.CTk()
+
 
 #Inicializacao de Stringvars
 strvar_vehicle_ID = ctk.StringVar()
@@ -27,7 +32,8 @@ strvar_route_node_list = ctk.StringVar()
 strvar_route_time_list = ctk.StringVar()
 strvar_route_reservation_result = ctk.StringVar()
 
-#id do veiculo
+
+#label de id do veiculo
 label_user_ID = ctk.CTkLabel(ctk_frame_main,textvariable=strvar_vehicle_ID) # type: ignore
 
 #Elementos graficos de status do veiculo
@@ -45,6 +51,8 @@ def closeAny(frame):
 
 #frame4 = Gerenciador de Recarga
 def openRechargeManager():
+
+    global vehicle
 
     frame4 = ctk.CTkToplevel(ctk_frame_main) 
     frame4.title('Gerenciador de Recarga')
@@ -75,22 +83,39 @@ button_open_recharge_manager = ctk.CTkButton(ctk_frame_main,text=' ABRIR MENU DE
 #Frame2 = Gerenciador de Rotas
 def openRouteManager():
 
+    global vehicle
+
     frame2 = ctk.CTkToplevel(ctk_frame_main)
+
     frame2.title('Gerenciador de Rotas')
     frame2.geometry('600x800')
     frame2.attributes('-topmost',True)
-    
+
+    #Caixas de entrada de texto compartilhadas entre diferentes sub-janelas
     box_destination_server_address = ctk.CTkEntry(frame2,placeholder_text=' digite o servidor de destino ',width=200)
     box_destination_server_address.pack(pady=10)
 
     label_actual_node_list = ctk.CTkLabel(frame2, textvariable= strvar_route_node_list)
     label_actual_node_list.pack(pady=10)
-    
-    #comandos a serem definidos
-    backButton = ctk.CTkButton(frame2,text=' < ')
+
+    def routeBackwardGet():
+
+        #Captura o valor do servidor de destino
+        vehicle.destinyServerAddress = box_destination_server_address.get()
+
+        vehicle.routeBackward()
+
+    def routeForwardGet():
+
+        #Captura o valor do servidor de destino
+        vehicle.destinyServerAddress = box_destination_server_address.get()
+
+        vehicle.routeForward()
+
+    backButton = ctk.CTkButton(frame2,text=' < ', command=routeBackwardGet)
     backButton.pack(pady=5)
 
-    forwardButton = ctk.CTkButton(frame2,text=' > ')
+    forwardButton = ctk.CTkButton(frame2,text=' > ', command=routeForwardGet)
     forwardButton.pack(pady=20)
     
     selectRouteButton = ctk.CTkButton(frame2,text=' REQUISITAR RESERVA NA ROTA ')
@@ -104,6 +129,8 @@ button_open_route_manager = ctk.CTkButton(ctk_frame_main,text=' ABRIR MENU DE RE
 
 #frame3 = histórico
 def openHistoryWindow():
+
+    global vehicle
 
     frame3 = ctk.CTkToplevel(ctk_frame_main)
     frame3.title('Historico de Compras')

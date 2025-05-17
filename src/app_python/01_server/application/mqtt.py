@@ -43,9 +43,10 @@ def listenToRequest(fileLock: threading.Lock, receiverLock: threading.Lock, isEx
     def on_message(client: mqtt_client.Client, userdata, msg: mqtt_client.MQTTMessage):
         setattr(client, "decodedBytes", msg.payload.decode())
         
-        print("=============================================")
-        print(mqttClientReceiver.decodedBytes)
-        print("=============================================")
+        #print("=============================================")
+        #print(topic)
+        #print(mqttClientReceiver.decodedBytes)
+        #print("=============================================")
         
     mqttClientReceiver.on_message = on_message
 
@@ -105,10 +106,10 @@ def sendResponse(senderLock: threading.Lock, broker, port, serverIP, clientAddre
     
     mqttMessage = [serverIP, port, response]
 
-    print("--------------------------------------------")
-    print(topic)
-    print(mqttMessage)
-    print("--------------------------------------------")
+    #print("--------------------------------------------")
+    #print(topic)
+    #print(mqttMessage)
+    #print("--------------------------------------------")
     
     senderLock.acquire()
 
