@@ -14,8 +14,80 @@ from application.mqtt import *
 
 
 #Funcao para registrar uma estacao de recarga
-def registerChargeStation(fileLock: threading.Lock, randomID, senderLock: threading.Lock, broker, port, serverIP, requestID, stationAddress, requestParameters):
+def registerChargeStation(randomID, senderLock: threading.Lock, broker, port, serverIP, requestID, stationAddress, requestParameters):
 
+    #Funcao local, para eliminar uso de locks dentro da principal (embrulhada com lock de arquivos)
+    def registerRequestResultLocal(clientAddress, requestID, requestResult):
+
+        #Dicionario de propriedades da requisicao
+        requestTable = {}
+        requestTable["ID"] = requestID
+        requestTable["result"] = requestResult
+        
+        #Obtem a string de endereco do cliente
+        clientAddressString, _ = clientAddress
+        
+        #Concatena o nome do arquivo para a entrada da requisicao
+        requestFileName = (clientAddressString.strip('.') + ".json")
+        
+        #Cria uma entrada referente a requisicao e ao resultado obtido
+        writeFile(["clientdata", "requests", requestFileName], requestTable)
+
+    #Funcao local, para eliminar uso de locks dentro da principal (embrulhada com lock de arquivos)
+    def registerLogEntryLocal(fileDir, entryLabel, logRequesterLabel, requester):
+    
+        #Acha a data local de hoje
+        localDate = str(datetime.date.today())
+
+        #Concatena o nome do arquivo e faz append com a lista do diretorio
+        logFileName = localDate + ".txt"
+        fileDir.append(logFileName)
+
+        #Acha o tempo preciso local do momento
+        localTimeStamp = str(datetime.datetime.now())
+
+        #Concatena a entrada que sera registrada no log
+        #Formato: [TIMESTAMP] NAME: nome-da-entrada ; ADDRESS/ID: 
+        logEntry = ("[" + localTimeStamp + "] NAME: " + entryLabel + " ; " + logRequesterLabel + ": " + requester + "\n")
+        
+        #Adiciona a entrada no arquivo de log correspondente
+        appendFile(fileDir, logEntry)
+
+    #Funcao local, para eliminar uso de locks dentro da principal (embrulhada com lock de arquivos)
+    def getRandomIDLocal(randomID):
+
+        lettersanddigits = string.ascii_uppercase + string.digits
+
+        #Loop para gerar IDs ate satisfazer certas condicoes
+        while True:
+
+            newRandomID = ""
+
+            #Concatena os os digitos ou letras aleatorios para um novo ID
+            for count in range(0,24):
+                newRandomID += random.choice(lettersanddigits)
+
+            #Concatena com ".json" para saber qual e o nome do arquivo a ser analisado
+            completeFileName = (newRandomID + ".json")
+            
+            stationVerify = False
+            vehicleVerify = False
+
+            #Verifica se o ID aleatorio ja tem registro em estacoes (raro, mas pode acontecer)
+            stationVerify = verifyFile(["clientdata", "clients", "stations"], completeFileName)
+            
+            #Se for o caso
+            if (stationVerify == False):
+                
+                #Faz o mesmo processo para veiculos
+                vehicleVerify = verifyFile(["clientdata", "clients", "vehicles"], completeFileName)
+            
+            #Caso o arquivo esperado nao exista
+            if ((stationVerify == False) and (vehicleVerify == False) and (randomID != newRandomID)):
+
+                #Retorna o novo ID aleatorio
+                return newRandomID
+    
     #Caso os parametros da requisicao sejam do tamanho adequado...
     if (len(requestParameters) >= 4):
 
@@ -40,19 +112,16 @@ def registerChargeStation(fileLock: threading.Lock, randomID, senderLock: thread
             #Concatena o nome do arquivo/
             fileName = (randomID + ".json")
 
-            #Grava as informacoes em arquivo de texto
-            fileLock.acquire()
             writeFile(["clientdata", "clients", "stations", fileName], stationInfo)
-            fileLock.release()
             
             #Grava o status da requisicao (mesmo conteudo da mensagem enviada como resposta)
-            registerRequestResult(fileLock, stationAddress, requestID, 'OK')
+            registerRequestResultLocal(stationAddress, requestID, 'OK')
 
             #Registra no log
-            registerLogEntry(fileLock, ["logs", "performed"], "RGTSTATION", "S_ID", stationID)
+            registerLogEntryLocal(["logs", "performed"], "RGTSTATION", "S_ID", stationID)
 
             #Gera um novo ID aleatorio e exibe mensagem para conhecimento do mesmo
-            randomID = getRandomID(fileLock, randomID)
+            randomID = getRandomIDLocal(randomID)
             print("ID para o proximo cadastro de estacao de carga: " + randomID)
 
             requestSuccess = True
@@ -65,7 +134,7 @@ def registerChargeStation(fileLock: threading.Lock, randomID, senderLock: thread
         else:
 
             #Grava o status da requisicao (mesmo conteudo da mensagem enviada como resposta)
-            registerRequestResult(fileLock, stationAddress, requestID, 'ERR')
+            registerRequestResultLocal(stationAddress, requestID, 'ERR')
 
             #Responde o status da requisicao para o cliente
             sendResponse(senderLock, broker, port, serverIP, stationAddress, 'ERR')
@@ -73,7 +142,7 @@ def registerChargeStation(fileLock: threading.Lock, randomID, senderLock: thread
     else:
 
         #Grava o status da requisicao (mesmo conteudo da mensagem enviada como resposta)
-        registerRequestResult(fileLock, stationAddress, requestID, 'ERR')
+        registerRequestResultLocal(stationAddress, requestID, 'ERR')
 
         #Responde o status da requisicao para o cliente
         sendResponse(senderLock, broker, port, serverIP, stationAddress, 'ERR')
