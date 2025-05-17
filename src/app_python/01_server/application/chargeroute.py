@@ -31,7 +31,7 @@ def respondWithRoute(fileLock: threading.Lock, senderLock: threading.Lock, broke
         routeEndAddress = str(requestParameters[1])
 
         #Se o indice e numerico e o endereco de destino maior que 1
-        if((routeIndex.isnumeric() == True) and (len(routeEndAddress) > 0)):
+        if((routeIndex.isnumeric() == True) and (int(routeIndex) >= 0) and (len(routeEndAddress) > 0)):
 
             routeIndex = int(routeIndex)
             
@@ -40,8 +40,9 @@ def respondWithRoute(fileLock: threading.Lock, senderLock: threading.Lock, broke
             routeInfo = readFile(["serverdata", "routes.json"])
             fileLock.release()
             
-            validRouteCount = 0 
+            validRouteCount = 0
             
+            #print(routeInfo)
             #Loop que percorre a lista de rotas
             for routeCount in range(0, len(routeInfo)):
                 
@@ -56,7 +57,9 @@ def respondWithRoute(fileLock: threading.Lock, senderLock: threading.Lock, broke
                     
                     #Se o indice tambem for igual ao contador de rotas validas
                     if(routeIndex == validRouteCount):
-                        
+
+                        routeNodeNameList
+
                         #O indice da rota como visto no servidor a ser retornado ao cliente para uso posterior
                         serverRouteIndex = str(routeCount)
                         
@@ -65,15 +68,12 @@ def respondWithRoute(fileLock: threading.Lock, senderLock: threading.Lock, broke
                             
                             actualRouteNode = actualRoute[nodeCount]
                             actualNodeName = actualRouteNode[1]
-                            
+
                             #Adiciona o nome do servidor do no atual na lista de nomes de nos (elemento visual da rota)
                             routeNodeNameList.append(actualNodeName)
                             
-                    #Caso contrario
-                    else:
-                        
-                        #Aumenta o contador de rotas validas, para chegar ao indice requisitado
-                        validRouteCount += 1
+                    #Aumenta o contador de rotas validas, para chegar ao indice requisitado
+                    validRouteCount += 1
     except:
         pass
     
