@@ -117,28 +117,22 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
         noNegativeResponse = True
 
         #Loop que garante que os nos serao percorridos em um dos dois sentidos (ate o final caso nao acontecam problemas ou voltando ate o inicio caso acontecam problemas)
-        while ((nodeIndex >= 0) and (nodeIndex < len(chosenRoute))):
+        while ((nodeIndex < len(reservationTimeList)) and (nodeIndex < len(chosenRoute)) and (nodeIndex >= 0)):
             
             #Se nao foram encontrados problemas na reserva, deve ser continuado o processo de reservar pontos
             if (noNegativeResponse == True):
                 
                 #Informacoes do no atual
-                chosenRouteNodeAddress, _ = chosenRoute[nodeIndex]
+                chosenRouteNodeAddress = chosenRoute[nodeIndex][0]
                 chosenNodeReservationTime = reservationTimeList[nodeIndex]
 
                 #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo e o horario desejado)
-                removeRequestParameters = [vehicleID]
-                
-                #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                httpRequest(fileLock, chosenRouteNodeAddress, ["urr", removeRequestParameters], 0)
-
-                #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo e o horario desejado)
-                addRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
+                serverRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
 
                 #Manda a mensagem solicitando reserva de um ponto naquele servidor
-                content = httpRequest(fileLock, chosenRouteNodeAddress, ["drr", [addRequestParameters]], 10)
+                content = httpRequest(fileLock, chosenRouteNodeAddress, ["drr", [serverRequestParameters]], 10)
 
-                #Se a resposta e positiva, podemos ir usar as proximas coordenadas e ir ao proximo elemento
+                #Se a resposta e positiva (lista de tamanho 2), podemos ir usar as coordenadas retornadas para fazer o processo de reserva no proximo no
                 if (len(content) >= 2):
                     
                     coordX = str(content[0])
@@ -152,58 +146,29 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
 
                     noNegativeResponse = False
 
-            #Mas se foram encontrados problemas, deve ser desfeita a reserva do no anterior (se o indice to atual for maior ou igual a 0)
-            elif ((noNegativeResponse == False) and (nodeIndex > 0)):
+            #Mas se foram encontrados problemas, o indice e reduzido deve ser desfeita a reserva do no anterior (se o indice to atual for maior ou igual a 0)
+            elif (noNegativeResponse == False):
                 
                 #Diminui o indice do no
                 nodeIndex -= 1
 
-                #Informacoes do no atual
-                chosenRouteNodeAddress, _ = chosenRoute[nodeIndex]
-
-                #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo)
-                serverRequestParameters = [vehicleID]
-                
-                #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                httpRequest(fileLock, chosenRouteNodeAddress, ["urr", serverRequestParameters], 0)
-
-            #Finalizado o loop, verifica o status da direcao novamente
-            #Se ainda estiver normal, a operacao foi bem-sucedida, o que quer dizer que a rota atual do veiculo sera limpa, sera e registrada a nova
-            if (noNegativeResponse == True):
-                
-                response = "OK"
-
-                '''#Nome do arquivo do veiculo
-                vehicleFileName = (vehicleID + ".json")
-                
-                fileLock.acquire()
-
-                #Le o arquivo do veiculo com o ID especificado
-                vehicleInfo = readFile(["clientdata", "clients", "vehicles", vehicleFileName])
-                
-                #Le as informacoes de rota e copia
-                lastRoute = vehicleInfo["last_route"]
-                oldLastRoute = lastRoute.copy()
-
-                #Registra a nova rota e o tempo atual como de reserva
-                vehicleInfo["last_route"] = chosenRoute
-                vehicleInfo["last_routed_at"] = int(time.time())
-
-                #Salva as novas informacoes
-                writeFile(["clientdata", "clients", "vehicles", vehicleFileName], vehicleInfo)
-                
-                fileLock.release()
-
-                for lastRouteNodeIndex in range (0, len(oldLastRoute)):
+                #Se o indice ainda for maior ou igual a zero apos reduzir, e necessario desfazer a reserva naquele servidor
+                if(nodeIndex >= 0):
 
                     #Informacoes do no atual
-                    lastRouteNodeAddress, _ = oldLastRoute[lastRouteNodeIndex]
+                    chosenRouteNodeAddress = chosenRoute[nodeIndex][0]
 
                     #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo)
                     serverRequestParameters = [vehicleID]
                     
                     #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                    httpRequest(lastRouteNodeAddress, ["urr", serverRequestParameters])'''
+                    httpRequest(fileLock, chosenRouteNodeAddress, ["urr", serverRequestParameters], 0)
+
+            #Finalizado o loop, verifica o status da direcao novamente
+            #Se ainda estiver normal, a operacao foi bem-sucedida, o que quer dizer que a rota atual do veiculo sera limpa, sera e registrada a nova
+            if ((len(reservationTimeList) > 0) and (noNegativeResponse == True)):
+                
+                response = "OK"
 
     except:
         pass
@@ -315,6 +280,24 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
 
     #Caso o ID do veiculo/estacao fornecidos sejam validos e o horario do agendamento esteja alem do horario atual mais a janela de tempo de reserva
     if ((clientVerify == True) and (reservationTime > (actualTime + timeWindow))):
+
+        #Loop que percorre a lista de estacoes de carga
+        for stationIndex in range(0, len(stationList)):
+
+            #Nome do arquivo
+            actualStationFileName = stationList[stationIndex]
+
+            #Carrega as informacoes da estacao atual
+            actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
+
+            try:
+                #Tenta remover a entrada com o ID do veiculo solicitante da lista de agendamento
+                del actualStationTable["vehicle_bookings"][vehicleID]
+
+                #Grava o resultado da acao
+                writeFile(["clientdata", "clients", "stations", actualStationFileName], actualStationTable)
+            except:
+                pass
         
         #Nome do arquivo da estacao
         stationFileName = (stationID + ".json")
@@ -352,7 +335,7 @@ def undoReservation(fileLock: threading.Lock, requestParameters):
         actualStationTable = readFile(["clientdata", "clients", "stations", actualStationFileName])
 
         try:
-            #Tenta remover a entrada com o ID do veiculo solicitante da lista de agendamento, pois o mesmo acabou de iniciar o processo de recarga
+            #Tenta remover a entrada com o ID do veiculo solicitante da lista de agendamento
             del actualStationTable["vehicle_bookings"][vehicleID]
 
             #Grava o resultado da acao
