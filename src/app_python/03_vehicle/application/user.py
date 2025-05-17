@@ -223,9 +223,9 @@ class User():
         #Caso contrario, atualiza as informacoes de acordo com o retorno (informacoes da estacao mais proxima)
         else:
             
-            self.nearestStationID = response[0]
-            self.nearestStationDistance = response[1]
-            self.nearestStationPrice = response[2]
+            self.nearestStationID = str(response[0])
+            self.nearestStationDistance = str(response[1])
+            self.nearestStationPrice = str(response[2])
     
     #Funca que gera a guia de pagamento para recarga
     def simulateForNearestSpot(self):
@@ -290,14 +290,16 @@ class User():
             (add, response) = self.listenToResponse()
             retry += 1
 
-        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
-        if((len(response) >= 4) and (response[0] == "0")):
+        if(retry < 3):
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
                 self.requestID = str(int(self.requestID) + 1)
             else:
                 self.requestID = "1"
+
+        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+        if((len(response) >= 4) and (response[0] == "0")):
 
             #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra)
             requestParameters = [self.ID, str(self.historyPurchaseIndex)]
@@ -315,6 +317,14 @@ class User():
                 (add, response) = self.listenToResponse()
                 retry += 1
 
+            if(retry < 3):
+
+                #Atualiza o ID de requisicao
+                if (int(self.requestID) < 63):
+                    self.requestID = str(int(self.requestID) + 1)
+                else:
+                    self.requestID = "1"
+
             #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
             if(len(response) >= 4 and response[0] != "0"):
                 
@@ -323,12 +333,6 @@ class User():
                 self.historyPurchaseTotal = response[1]
                 self.historyPurchasePrice = response[2]
                 self.historyPurchaseCharge = response[3]
-
-                #Atualiza o ID de requisicao
-                if (int(self.requestID) < 63):
-                    self.requestID = str(int(self.requestID) + 1)
-                else:
-                    self.requestID = "1"
 
         #Caso contrario, atualiza o indice atual da compra analisada
         elif(len(response) >= 4):
@@ -340,12 +344,6 @@ class User():
             self.historyPurchaseTotal = response[1]
             self.historyPurchasePrice = response[2]
             self.historyPurchaseCharge = response[3]
-
-            #Atualiza o ID de requisicao
-            if (int(self.requestID) < 63):
-                self.requestID = str(int(self.requestID) + 1)
-            else:
-                self.requestID = "1"
 
     
     #Funcao para obter informacoes da compra no indice a seguir
@@ -367,14 +365,16 @@ class User():
             (add, response) = self.listenToResponse()
             retry += 1
 
-        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
-        if((len(response) >= 4) and (response[0] == "0")):
+        if(retry < 3):
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
                 self.requestID = str(int(self.requestID) + 1)
             else:
                 self.requestID = "1"
+
+        #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
+        if((len(response) >= 4) and (response[0] == "0")):
 
             #Faz o conteudo da requisicao (ID do veiculo e indice atual de compra)
             requestParameters = [self.ID, str(self.historyPurchaseIndex)]
@@ -392,6 +392,14 @@ class User():
                 (add, response) = self.listenToResponse()
                 retry += 1
 
+            if(retry < 3):
+
+                #Atualiza o ID de requisicao
+                if (int(self.requestID) < 63):
+                    self.requestID = str(int(self.requestID) + 1)
+                else:
+                    self.requestID = "1"
+
             #Caso a resposta diga que nao encontrou compra naquele indice para o veiculo
             if(len(response) >= 4 and response[0] != "0"):
                 
@@ -400,12 +408,6 @@ class User():
                 self.historyPurchaseTotal = response[1]
                 self.historyPurchasePrice = response[2]
                 self.historyPurchaseCharge = response[3]
-
-                #Atualiza o ID de requisicao
-                if (int(self.requestID) < 63):
-                    self.requestID = str(int(self.requestID) + 1)
-                else:
-                    self.requestID = "1"
 
         #Caso contrario, atualiza o indice atual da compra analisada
         elif(len(response) >= 4):
@@ -417,12 +419,6 @@ class User():
             self.historyPurchaseTotal = response[1]
             self.historyPurchasePrice = response[2]
             self.historyPurchaseCharge = response[3]
-
-            #Atualiza o ID de requisicao
-            if (int(self.requestID) < 63):
-                self.requestID = str(int(self.requestID) + 1)
-            else:
-                self.requestID = "1"
 
 
     #Funcao para obter informacoes da rota no indice anterior
@@ -444,14 +440,16 @@ class User():
             (add, response) = self.listenToResponse()
             retry += 1
 
-        #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
-        if((len(response) >= 2) and (response[0] == "-1")):
+        if(retry < 3):
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
                 self.requestID = str(int(self.requestID) + 1)
             else:
                 self.requestID = "1"
+
+        #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
+        if((len(response) >= 2) and (response[0] == "-1")):
 
             #Faz o conteudo da requisicao (ID do veiculo e indice atual de rota - 1)
             requestParameters = [self.routeSearchIndex, self.destinyServerAddress]
@@ -469,18 +467,20 @@ class User():
                 (add, response) = self.listenToResponse()
                 retry += 1
 
-            #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
-            if(len(response) >= 2 and response[0] != "-1"):
-                
-                #Atualiza informacoes da rota exibida/seelecionada
-                self.routeReservationIndex = response[0]
-                self.routeNameList = response[1]
+            if(retry < 3):
 
                 #Atualiza o ID de requisicao
                 if (int(self.requestID) < 63):
                     self.requestID = str(int(self.requestID) + 1)
                 else:
                     self.requestID = "1"
+
+            #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
+            if(len(response) >= 2 and response[0] != "-1"):
+                
+                #Atualiza informacoes da rota exibida/seelecionada
+                self.routeReservationIndex = response[0]
+                self.routeNameList = response[1]
 
         #Caso contrario, atualiza o indice atual da rota analisada
         elif(len(response) >= 2):
@@ -490,12 +490,6 @@ class User():
             #Atualiza informacoes da rota exibida/seelecionada
             self.routeReservationIndex = response[0]
             self.routeNameList = response[1]
-
-            #Atualiza o ID de requisicao
-            if (int(self.requestID) < 63):
-                self.requestID = str(int(self.requestID) + 1)
-            else:
-                self.requestID = "1"
 
     #Funcao para obter informacoes da rota no indice anterior
     def routeForward(self):
@@ -516,14 +510,16 @@ class User():
             (add, response) = self.listenToResponse()
             retry += 1
 
-        #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
-        if((len(response) >= 2) and (response[0] == "-1")):
+        if(retry < 3):
 
             #Atualiza o ID de requisicao
             if (int(self.requestID) < 63):
                 self.requestID = str(int(self.requestID) + 1)
             else:
                 self.requestID = "1"
+
+        #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
+        if((len(response) >= 2) and (response[0] == "-1")):
 
             #Faz o conteudo da requisicao (ID do veiculo e indice atual de rota - 1)
             requestParameters = [self.routeSearchIndex, self.destinyServerAddress]
@@ -541,18 +537,20 @@ class User():
                 (add, response) = self.listenToResponse()
                 retry += 1
 
-            #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
-            if(len(response) >= 2 and response[0] != "-1"):
-                
-                #Atualiza informacoes da rota exibida/seelecionada
-                self.routeReservationIndex = response[0]
-                self.routeNameList = response[1]
+            if(retry < 3):
 
                 #Atualiza o ID de requisicao
                 if (int(self.requestID) < 63):
                     self.requestID = str(int(self.requestID) + 1)
                 else:
                     self.requestID = "1"
+
+            #Caso a resposta diga que nao encontrou rota naquele indice para o veiculo
+            if(len(response) >= 2 and response[0] != "-1"):
+                
+                #Atualiza informacoes da rota exibida/seelecionada
+                self.routeReservationIndex = response[0]
+                self.routeNameList = response[1]
 
         #Caso contrario, atualiza o indice atual da rota analisada
         elif(len(response) >= 2):
@@ -562,12 +560,6 @@ class User():
             #Atualiza informacoes da rota exibida/seelecionada
             self.routeReservationIndex = response[0]
             self.routeNameList = response[1]
-
-            #Atualiza o ID de requisicao
-            if (int(self.requestID) < 63):
-                self.requestID = str(int(self.requestID) + 1)
-            else:
-                self.requestID = "1"
     
     #Funcao para adicionar um novo horario na lista de horario a agendar
     def addReservationToList(self):
