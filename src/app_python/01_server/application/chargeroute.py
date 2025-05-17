@@ -100,11 +100,11 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
 
         #Parametros da operacao, de acordo com a informacao recebida
         vehicleID = requestParameters[0]
-        routeIndex = requestParameters[1]
+        routeIndex = int(requestParameters[1])
         reservationTimeList = requestParameters[2]
-        vehicleAutonomy = requestParameters[3]
-        coordX = requestParameters[5]
-        coordY = requestParameters[6]
+        vehicleAutonomy = int(requestParameters[3])
+        coordX = int(requestParameters[5])
+        coordY = int(requestParameters[6])
             
         #Le o arquivo de informacoes de rotas
         fileLock.acquire()
@@ -124,7 +124,7 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 
                 #Informacoes do no atual
                 chosenRouteNodeAddress = chosenRoute[nodeIndex][0]
-                chosenNodeReservationTime = reservationTimeList[nodeIndex]
+                chosenNodeReservationTime = int(reservationTimeList[nodeIndex])
 
                 #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo e o horario desejado)
                 serverRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
