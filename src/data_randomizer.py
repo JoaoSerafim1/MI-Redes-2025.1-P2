@@ -67,7 +67,7 @@ for vehicleIndex in range(0, 4):
     #Gera dados aleatorios do veiculo
     randomVehicleConsumption = (getBinomialRandomInt(12, 30, 50) / 100)
     randomVehicleCapacity = getBinomialRandomInt(20, 200, 20)
-    randomVehicleAutonomy = (randomVehicleCapacity / randomVehicleConsumption)
+    randomVehicleAutonomy = int(randomVehicleCapacity / randomVehicleConsumption)
     randomVehicleBatteryLevel = (getBinomialRandomInt(15, 100, 20) / 100)
 
     #Abre arquivo do veiculo
@@ -75,9 +75,9 @@ for vehicleIndex in range(0, 4):
     vehicleTable = readFile(["files_test", vehicleFolderName, "vehicledata", "vehicle_data.json"])
 
     #Coloca as informacoes no dicionario
-    vehicleTable["capacity"] = randomVehicleCapacity
-    vehicleTable["autonomy"] = randomVehicleAutonomy
-    vehicleTable["battery_level"] = randomVehicleBatteryLevel
+    vehicleTable["capacity"] = str(randomVehicleCapacity)
+    vehicleTable["autonomy"] = str(randomVehicleAutonomy)
+    vehicleTable["battery_level"] = str(randomVehicleBatteryLevel)
 
     #Grava as informacoes geradas
     writeFile(["files_test", vehicleFolderName, "vehicledata", "vehicle_data.json"], vehicleTable)
@@ -98,7 +98,7 @@ for stationIndex in range(0, 10):
     stationTable = readFile(["files_test", stationFolderName, "stationdata", "station_data.json"])
     
     #Coloca a informacao no dicionario
-    stationTable["unitary_price"] = randomUnitaryPrice
+    stationTable["unitary_price"] = str(randomUnitaryPrice)
 
     #Gravas as informacoes geradas
     writeFile(["files_test", stationFolderName, "stationdata", "station_data.json"], stationTable)
