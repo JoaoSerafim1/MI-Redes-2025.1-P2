@@ -311,7 +311,7 @@ class User():
 
             retry = 0
             #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-            while((response == True) and (retry < 3)):
+            while((response == "") and (retry < 3)):
 
                 self.sendRequest(requestContent)
                 (add, response) = self.listenToResponse()
@@ -359,7 +359,7 @@ class User():
 
         retry = 0
         #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
-        while((response == True) and (retry < 3)):
+        while((response == "") and (retry < 3)):
 
             self.sendRequest(requestContent)
             (add, response) = self.listenToResponse()
@@ -386,7 +386,7 @@ class User():
 
             retry = 0
             #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-            while((response == True) and (retry < 3)):
+            while((response == "") and (retry < 3)):
 
                 self.sendRequest(requestContent)
                 (add, response) = self.listenToResponse()
@@ -434,7 +434,7 @@ class User():
 
         retry = 0
         #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
-        while((response == True) and (retry < 3)):
+        while((response == "") and (retry < 3)):
 
             self.sendRequest(requestContent)
             (add, response) = self.listenToResponse()
@@ -461,7 +461,7 @@ class User():
 
             retry = 0
             #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-            while((response == True) and (retry < 3)):
+            while((response == "") and (retry < 3)):
 
                 self.sendRequest(requestContent)
                 (add, response) = self.listenToResponse()
@@ -504,7 +504,7 @@ class User():
 
         retry = 0
         #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
-        while((response == True) and (retry < 3)):
+        while((response == "") and (retry < 3)):
 
             self.sendRequest(requestContent)
             (add, response) = self.listenToResponse()
@@ -531,7 +531,7 @@ class User():
 
             retry = 0
             #Se nao receber resposta valida, repete o envio (so acontece caso o servidor esteja indisponivel)
-            while((response == True) and (retry < 3)):
+            while((response == "") and (retry < 3)):
 
                 self.sendRequest(requestContent)
                 (add, response) = self.listenToResponse()
@@ -616,3 +616,48 @@ class User():
             
             except:
                 pass
+    
+    #Funcao para confirmar a reserva no indice do servidor atual
+    def confirmReservation(self):
+
+        #Le informacoes do veiculo
+        localDataTable = readFile(["vehicledata", "vehicle_data.json"])
+
+        #Faz o conteudo da requisicao (informacoes utilizada para iniciar o processo de reserva)
+        requestParameters = [self.ID, self.routeReservationIndex, self.routeReservationTimeList, self.autonomy, localDataTable["coord_x"], localDataTable["coord_y"]]
+        requestContent = [self.requestID, 'rrt', requestParameters]
+
+        #Envia a requisicao
+        self.sendRequest(requestContent)
+        (add, response) = self.listenToResponse()
+
+        retry = 0
+        #Se nao receber resposta valida, repete o envio mais 3 vezes (so acontece caso o servidor esteja indisponivel)
+        while((response == "") and (retry < 3)):
+
+            self.sendRequest(requestContent)
+            (add, response) = self.listenToResponse()
+            retry += 1
+
+        #Se saiu antes de gastar as 3 tentativas, foi bem-sucedido
+        if(retry < 3):
+
+            #Atualiza o ID de requisicao
+            if (int(self.requestID) < 63):
+                self.requestID = str(int(self.requestID) + 1)
+            else:
+                self.requestID = "1"
+
+            #Muda o texto de resposta de acordo com a resposta do servidor e limpa o conteudo dos elementos
+            if(response == "OK"):
+                self.routeReservationResult = " Reserva bem-sucedida. Tenha uma boa viagem. "
+                
+                self.routeReservationTimeList = []
+                self.routeReservationNameList = []
+            else:
+                self.routeReservationResult = " Não foi possível completar a reserva. Tente novamente mais tarde. "
+        
+        #Caso contrario, nao conseguiu conexao
+        else:
+
+            self.routeReservationResult = " Servidor indisponível. "
