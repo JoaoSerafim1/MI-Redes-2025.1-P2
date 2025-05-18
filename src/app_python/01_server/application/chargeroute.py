@@ -8,13 +8,50 @@
 #Importa bibliotecas basicas do python 3
 import threading
 import time
+import requests
 
 #Importa as bibliotecas customizadas da aplicacao
 from application.lib.mf import *
 
 #Importa os modulos da aplicacao
 from application.mqtt import *
-from application.rest import *
+from application.rest import httpPort
+
+
+#Funcao para fazer uma requisicao a partir de um servidor-remetente e ler a resposta
+def httpRequest(fileLock: threading.Lock, destinyServerAddress, port, timeout, payload):
+
+    url = 'http://' + destinyServerAddress + ':' + str(port) + '/submit'
+    
+    #Variavel do conteudo retornado, inicialmente string vazia
+    content = ""
+
+    #Tenta conectar ao servidor remoto e fazer a requisicao
+    try:
+        
+        response = requests.post(url, json=payload, timeout=timeout)
+
+        #Verifica a resposta
+        if response.status_code == 200:
+            content = response.json()
+
+        #print("=============================================")
+        #print(url)
+        #print(payload)
+        #print("+++++++++++++++++++++++++++++++++++++++++++++")
+        #print(response)
+        #print(content)
+        #print("=============================================")
+        
+        #Registra no log
+        registerLogEntry(fileLock, ["logs", "received"], "HTTPRESPONSE", "ADDRESS", destinyServerAddress)
+    
+    #Se falhar, foi devido a timeout
+    except:
+        pass
+    
+    #Retorna o objeto da mensagem
+    return content
 
 
 #Funcao para retornar informacoes de uma rota em especifico
@@ -97,25 +134,25 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
 
     #Se estiver no formato adequado em qualquer momento da execucao
     try:
-
+        
         #Parametros da operacao, de acordo com a informacao recebida
         vehicleID = requestParameters[0]
         routeIndex = int(requestParameters[1])
         reservationTimeList = requestParameters[2]
-        vehicleAutonomy = int(requestParameters[3])
-        coordX = int(requestParameters[5])
-        coordY = int(requestParameters[6])
-            
+        vehicleAutonomy = float(requestParameters[3])
+        coordX = float(requestParameters[4])
+        coordY = float(requestParameters[5])
+        
         #Le o arquivo de informacoes de rotas
         fileLock.acquire()
         routeInfo = readFile(["serverdata", "routes.json"])
         fileLock.release()
-
+        
         chosenRoute = routeInfo[routeIndex]
 
         nodeIndex = 0
         noNegativeResponse = True
-
+        
         #Loop que garante que os nos serao percorridos em um dos dois sentidos (ate o final caso nao acontecam problemas ou voltando ate o inicio caso acontecam problemas)
         while ((nodeIndex < len(reservationTimeList)) and (nodeIndex < len(chosenRoute)) and (nodeIndex >= 0)):
             
@@ -125,18 +162,20 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                 #Informacoes do no atual
                 chosenRouteNodeAddress = chosenRoute[nodeIndex][0]
                 chosenNodeReservationTime = int(reservationTimeList[nodeIndex])
-
+                
                 #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo e o horario desejado)
-                serverRequestParameters = [vehicleID, chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
+                serverRequestParameters = [str(vehicleID), chosenNodeReservationTime, vehicleAutonomy, coordX, coordY]
 
+                payload = [str("drr"), serverRequestParameters]
+                
                 #Manda a mensagem solicitando reserva de um ponto naquele servidor
-                content = httpRequest(fileLock, chosenRouteNodeAddress, ["drr", [serverRequestParameters]], 10)
-
+                content = httpRequest(fileLock, chosenRouteNodeAddress, httpPort, 10, payload)
+                
                 #Se a resposta e positiva (lista de tamanho 2), podemos ir usar as coordenadas retornadas para fazer o processo de reserva no proximo no
                 if (len(content) >= 2):
                     
-                    coordX = str(content[0])
-                    coordY = str(content[1])
+                    coordX = float(content[0])
+                    coordY = float(content[1])
                     
                     #Aumenta o indice do no
                     nodeIndex += 1
@@ -159,10 +198,12 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
                     chosenRouteNodeAddress = chosenRoute[nodeIndex][0]
 
                     #Parametros da requisicao a ser enviada ao servidor do no atual (ID do veiculo)
-                    serverRequestParameters = [vehicleID]
+                    serverRequestParameters = [str(vehicleID)]
+
+                    payload = [str("urr"), serverRequestParameters]
                     
                     #Manda a mensagem solicitando remocao de reserva de um ponto naquele servidor
-                    httpRequest(fileLock, chosenRouteNodeAddress, ["urr", serverRequestParameters], 0)
+                    httpRequest(fileLock, chosenRouteNodeAddress, httpPort, 10, payload)
 
             #Finalizado o loop, verifica o status da direcao novamente
             #Se ainda estiver normal, a operacao foi bem-sucedida, o que quer dizer que a rota atual do veiculo sera limpa, sera e registrada a nova
@@ -190,10 +231,10 @@ def reserveRoute(fileLock: threading.Lock, senderLock: threading.Lock, broker, p
 def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
     
     vehicleID = requestParameters[0]
-    reservationTime = requestParameters[1]
-    vehicleAutonomy = requestParameters[2]
-    coordX = requestParameters[3]
-    coordY = requestParameters[4]
+    reservationTime = int(requestParameters[1])
+    vehicleAutonomy = float(requestParameters[2])
+    coordX = float(requestParameters[3])
+    coordY = float(requestParameters[4])
 
     fileLock.acquire()
 

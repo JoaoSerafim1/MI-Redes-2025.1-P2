@@ -95,37 +95,6 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             response_data = {"ERR": "PAGE NOT FOUND => use /submit"}
             self.wfile.write(json.dumps(response_data).encode())
 
-#Funcao para fazer uma requisicao a partir de um servidor-remetente e ler a resposta
-def httpRequest(fileLock: threading.Lock, destinyServerAddress, port, timeout, payload):
-
-    url = 'http://' + destinyServerAddress + ':' + str(port) + '/submit'
-    
-    #Variavel do conteudo retornado, inicialmente string vazia
-    content = ""
-
-    #Tenta conectar ao servidor remoto e fazer a requisicao
-    try:
-        
-        response = requests.post(url, json=payload, timeout=timeout)
-
-        #print("=============================================")
-        #print(response)
-        #print("=============================================")
-
-        #Verifica a resposta
-        if response.status_code == 200:
-            content = response.json()
-
-        #Registra no log
-        registerLogEntry(fileLock, ["logs", "received"], "HTTPRESPONSE", "ADDRESS", destinyServerAddress)
-    
-    #Se falhar, foi devido a timeout
-    except:
-        pass
-    
-    #Retorna o objeto da mensagem
-    return content
-
 def attemptAction(data):
     
     #Se o formato for adequado
