@@ -38,10 +38,9 @@ def readFile(pathList):
         return json.load(file)
     
 #Funcao para retornar um numero aleatorio dentro de um intervalo, por distribuicao binomial
-def getBinomialRandomInt(minimumValue: int, maximumValue: int, rollNumber: int) -> int:
+def getBinomialRandomInt(minimumValue: int, maximumValue: int) -> int:
 
-    #Acha o valor do incremento
-    increment:float = ((maximumValue - minimumValue) / rollNumber)
+    rollNumber = (maximumValue - minimumValue)
     
     #Soma para retornar
     randSum = minimumValue
@@ -55,7 +54,7 @@ def getBinomialRandomInt(minimumValue: int, maximumValue: int, rollNumber: int) 
         #Se sortear positivo (1), aumenta pelo incremento
         if incrementRandomInt == 1:
 
-            randSum += increment
+            randSum += 1
 
     #Retorna a soma inteira
     return int(randSum)
@@ -65,10 +64,10 @@ def getBinomialRandomInt(minimumValue: int, maximumValue: int, rollNumber: int) 
 for vehicleIndex in range(0, 4):
 
     #Gera dados aleatorios do veiculo
-    randomVehicleConsumption = (getBinomialRandomInt(12, 30, 50) / 100)
-    randomVehicleCapacity = getBinomialRandomInt(20, 200, 20)
+    randomVehicleConsumption = (getBinomialRandomInt(12, 25) / 100)
+    randomVehicleCapacity = getBinomialRandomInt(40, 120)
     randomVehicleAutonomy = int(randomVehicleCapacity / randomVehicleConsumption)
-    randomVehicleBatteryLevel = (getBinomialRandomInt(15, 100, 20) / 100)
+    randomVehicleBatteryLevel = (getBinomialRandomInt(15, 100) / 100)
 
     #Abre arquivo do veiculo
     vehicleFolderName = ("vehicle_0" + str(vehicleIndex + 1))
@@ -86,7 +85,7 @@ for vehicleIndex in range(0, 4):
 for stationIndex in range(0, 10):
 
     #Gera dados aleatorios da estacao
-    randomUnitaryPrice = (getBinomialRandomInt(65, 95, 20) / 100)
+    randomUnitaryPrice = (getBinomialRandomInt(60, 90) / 100)
 
     stationFolderName = ""
     if stationIndex < 9:
