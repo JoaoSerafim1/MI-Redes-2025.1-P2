@@ -17,7 +17,7 @@ def sendResponse(clientAddress, request):
     #Obtem a string do endereco do cliente
     clientAddressString, _ = clientAddress
 
-    broker = clientAddressString
+    broker = input("Insira o IP do broker MQTT: ")
     port = 1883
     topic = 'request'
     
@@ -36,12 +36,8 @@ def sendResponse(clientAddress, request):
         mqttClientSender.loop_start()
         mqttClientSender.publish(topic, serializedRequest)
         mqttClientSender.loop_stop()
-    except:
-        pass
+    except Exception as ex:
+        print(ex)
 
 
 sendResponse(('broker.emqx.io', 4821), ["a", "b", "c"])
-
-time.sleep(2)
-
-sendResponse(('broker.emqx.io', 5463), ["d", "e", "f"])

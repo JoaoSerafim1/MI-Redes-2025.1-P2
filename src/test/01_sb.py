@@ -16,7 +16,7 @@ def listenToRequest(timeout):
     global mqttClientReceiver
     global decodedBytes
 
-    broker = 'broker.emqx.io'
+    broker = client_ip
     port = 1883
     topic = "request"
 
@@ -32,11 +32,13 @@ def listenToRequest(timeout):
         decodedBytes = msg.payload.decode()
         
     mqttClientReceiver.on_message = on_message
-
-    #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
-    mqttClientReceiver.connect(broker, port)
-    mqttClientReceiver.subscribe(topic)
-    mqttClientReceiver.loop_start()
+    try:
+        #Conecta ao broker com os parametros desejados, assina o topico e entra no loop para esperar mensagem(s)
+        mqttClientReceiver.connect(broker, port)
+        mqttClientReceiver.subscribe(topic)
+        mqttClientReceiver.loop_start()
+    except Exception as ex:
+        print(ex)
 
     start_time = time.time()
 
@@ -59,8 +61,8 @@ def listenToRequest(timeout):
             #Separa a parte do endereco referente ao endereco IP
             add = (unserializedObj[0], unserializedObj[1])
             content = unserializedObj[2]
-    except Exception:
-        pass
+    except Exception as ex:
+        print(ex)
 
     print(add)
     print(content)
