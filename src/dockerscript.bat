@@ -74,6 +74,15 @@ IF "%par1%"=="run" (
     docker run -d -it --network=dev_bridge --name=charge_server_02 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_server_03 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_server_04 python-redes-image
+    docker container cp \config charge_server_01:\python_redes\
+    docker container cp \config charge_server_02:\python_redes\
+    docker container cp \config charge_server_03:\python_redes\
+    docker container cp \config charge_server_04:\python_redes\
+    docker exec charge_server_01 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+    docker exec charge_server_02 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+    docker exec charge_server_03 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+    docker exec charge_server_04 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+
     docker run -d -it --network=dev_bridge --name=charge_station_01 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_station_02 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_station_03 python-redes-image
@@ -110,6 +119,7 @@ IF "%par1%"=="update" (
     docker container cp \app_python\01_server charge_server_02:/python_redes/
     docker container cp \app_python\01_server charge_server_03:/python_redes/
     docker container cp \app_python\01_server charge_server_04:/python_redes/
+
     docker container cp \app_python\02_station charge_station_01:/python_redes/
     docker container cp \app_python\02_station charge_station_02:/python_redes/
     docker container cp \app_python\02_station charge_station_03:/python_redes/
@@ -126,16 +136,13 @@ IF "%par1%"=="testdump" (
     
     docker container cp \files_test\server_01\clientdata charge_server_01:/python_redes/01_server
     docker container cp \files_test\server_01\serverdata charge_server_01:/python_redes/01_server
-    docker container cp \files_test\server_01\logs charge_server_01:/python_redes/01_server
     docker container cp \files_test\server_02\clientdata charge_server_02:/python_redes/01_server
     docker container cp \files_test\server_02\serverdata charge_server_02:/python_redes/01_server
-    docker container cp \files_test\server_02\logs charge_server_02:/python_redes/01_server
     docker container cp \files_test\server_03\clientdata charge_server_03:/python_redes/01_server
     docker container cp \files_test\server_03\serverdata charge_server_03:/python_redes/01_server
-    docker container cp \files_test\server_03\logs charge_server_03:/python_redes/01_server
     docker container cp \files_test\server_04\clientdata charge_server_04:/python_redes/01_server
     docker container cp \files_test\server_04\serverdata charge_server_04:/python_redes/01_server
-    docker container cp \files_test\server_04\logs charge_server_04:/python_redes/01_server
+
     docker container cp \files_test\station_01\stationdata charge_station_01:/python_redes/02_station
     docker container cp \files_test\station_02\stationdata charge_station_02:/python_redes/02_station
     docker container cp \files_test\station_03\stationdata charge_station_03:/python_redes/02_station
@@ -222,6 +229,7 @@ IF "%par1%"=="import" (
     docker container cp charge_server_04:/python_redes/01_server/clientdata \files\imported\server_04
     docker container cp charge_server_04:/python_redes/01_server/serverdata \files\imported\server_04
     docker container cp charge_server_04:/python_redes/01_server/logs \files\imported\server_04
+
     docker container cp charge_station_01:/python_redes/02_station/stationdata \files\imported\station_01
     docker container cp charge_station_02:/python_redes/02_station/stationdata \files\imported\station_02
     docker container cp charge_station_03:/python_redes/02_station/stationdata \files\imported\station_03
@@ -248,6 +256,7 @@ IF "%par1%"=="export" (
     docker container cp \files\export\server_04\clientdata charge_server_04:/python_redes/01_server
     docker container cp \files\export\server_04\serverdata charge_server_04:/python_redes/01_server
     docker container cp \files\export\server_04\logs charge_server_04:/python_redes/01_server
+
     docker container cp \files\export\station_01\stationdata charge_station_01:/python_redes/02_station
     docker container cp \files\export\station_02\stationdata charge_station_02:/python_redes/02_station
     docker container cp \files\export\station_03\stationdata charge_station_03:/python_redes/02_station
@@ -274,6 +283,7 @@ IF "%par1%"=="clearimported" (
     rmdir /s /q \files\imported\server_04\clientdata
     rmdir /s /q \files\imported\server_04\serverdata
     rmdir /s /q \files\imported\server_04\logs
+
     rmdir /s /q \files\imported\station_01\stationdata
     rmdir /s /q \files\imported\station_02\stationdata
     rmdir /s /q \files\imported\station_03\stationdata
@@ -300,6 +310,7 @@ IF "%par1%"=="clearexport" (
     rmdir /s /q \files\export\server_04\clientdata
     rmdir /s /q \files\export\server_04\serverdata
     rmdir /s /q \files\export\server_04\logs
+    
     rmdir /s /q \files\export\station_01\stationdata
     rmdir /s /q \files\export\station_02\stationdata
     rmdir /s /q \files\export\station_03\stationdata

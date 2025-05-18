@@ -82,6 +82,15 @@ if [ $1 = 'run' ]; then
     docker run -d -it --network=dev_bridge --name=charge_server_02 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_server_03 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_server_04 python-redes-image
+    docker container cp ./config charge_server_01:/python_redes/
+    docker container cp ./config charge_server_02:/python_redes/
+    docker container cp ./config charge_server_03:/python_redes/
+    docker container cp ./config charge_server_04:/python_redes/
+    docker exec charge_server_01 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+    docker exec charge_server_02 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+    docker exec charge_server_03 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+    docker exec charge_server_04 mosquitto "-c" "/python_redes/config/mosquitto.conf" "-d"
+
     docker run -d -it --network=dev_bridge --name=charge_station_01 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_station_02 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_station_03 python-redes-image
@@ -92,6 +101,7 @@ if [ $1 = 'run' ]; then
     docker run -d -it --network=dev_bridge --name=charge_station_08 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_station_09 python-redes-image
     docker run -d -it --network=dev_bridge --name=charge_station_10 python-redes-image
+    
     docker run -d -it \
         --network=dev_bridge \
         --name=electric_vehicle_01 \
@@ -154,6 +164,7 @@ if [ $1 = 'update' ]; then
     docker container cp ./app_python/01_server charge_server_02:/python_redes/
     docker container cp ./app_python/01_server charge_server_03:/python_redes/
     docker container cp ./app_python/01_server charge_server_04:/python_redes/
+
     docker container cp ./app_python/02_station charge_station_01:/python_redes/
     docker container cp ./app_python/02_station charge_station_02:/python_redes/
     docker container cp ./app_python/02_station charge_station_03:/python_redes/
@@ -164,6 +175,7 @@ if [ $1 = 'update' ]; then
     docker container cp ./app_python/02_station charge_station_08:/python_redes/
     docker container cp ./app_python/02_station charge_station_09:/python_redes/
     docker container cp ./app_python/02_station charge_station_10:/python_redes/
+
     docker container cp ./app_python/03_vehicle electric_vehicle_01:/python_redes/
     docker container cp ./app_python/03_vehicle electric_vehicle_02:/python_redes/
     docker container cp ./app_python/03_vehicle electric_vehicle_03:/python_redes/
@@ -174,16 +186,18 @@ if [ $1 = 'testdump' ]; then
     
     docker container cp ./files_test/server_01/clientdata charge_server_01:/python_redes/01_server
     docker container cp ./files_test/server_01/serverdata charge_server_01:/python_redes/01_server
-    docker container cp ./files_test/server_01/logs charge_server_01:/python_redes/01_server
     docker container cp ./files_test/server_02/clientdata charge_server_02:/python_redes/01_server
     docker container cp ./files_test/server_02/serverdata charge_server_02:/python_redes/01_server
-    docker container cp ./files_test/server_02/logs charge_server_02:/python_redes/01_server
     docker container cp ./files_test/server_03/clientdata charge_server_03:/python_redes/01_server
     docker container cp ./files_test/server_03/serverdata charge_server_03:/python_redes/01_server
-    docker container cp ./files_test/server_03/logs charge_server_03:/python_redes/01_server
     docker container cp ./files_test/server_04/clientdata charge_server_04:/python_redes/01_server
     docker container cp ./files_test/server_04/serverdata charge_server_04:/python_redes/01_server
-    docker container cp ./files_test/server_04/logs charge_server_04:/python_redes/01_server
+    docker container cp ./test charge_server_01:/python_redes/
+    docker container cp ./test charge_server_02:/python_redes/
+    docker container cp ./test charge_server_03:/python_redes/
+    docker container cp ./test charge_server_04:/python_redes/
+
+
     docker container cp ./files_test/station_01/stationdata charge_station_01:/python_redes/02_station
     docker container cp ./files_test/station_02/stationdata charge_station_02:/python_redes/02_station
     docker container cp ./files_test/station_03/stationdata charge_station_03:/python_redes/02_station
@@ -194,6 +208,7 @@ if [ $1 = 'testdump' ]; then
     docker container cp ./files_test/station_08/stationdata charge_station_08:/python_redes/02_station
     docker container cp ./files_test/station_09/stationdata charge_station_09:/python_redes/02_station
     docker container cp ./files_test/station_10/stationdata charge_station_10:/python_redes/02_station
+
     docker container cp ./files_test/vehicle_01/vehicledata electric_vehicle_01:/python_redes/03_vehicle
     docker container cp ./files_test/vehicle_02/vehicledata electric_vehicle_02:/python_redes/03_vehicle
     docker container cp ./files_test/vehicle_03/vehicledata electric_vehicle_03:/python_redes/03_vehicle
@@ -272,6 +287,7 @@ if [ $1 = 'import' ]; then
     docker container cp charge_server_04:/python_redes/01_server/clientdata ./files/imported/server_04
     docker container cp charge_server_04:/python_redes/01_server/serverdata ./files/imported/server_04
     docker container cp charge_server_04:/python_redes/01_server/logs ./files/imported/server_04
+
     docker container cp charge_station_01:/python_redes/02_station/stationdata ./files/imported/station_01
     docker container cp charge_station_02:/python_redes/02_station/stationdata ./files/imported/station_02
     docker container cp charge_station_03:/python_redes/02_station/stationdata ./files/imported/station_03
@@ -282,6 +298,7 @@ if [ $1 = 'import' ]; then
     docker container cp charge_station_08:/python_redes/02_station/stationdata ./files/imported/station_08
     docker container cp charge_station_09:/python_redes/02_station/stationdata ./files/imported/station_09
     docker container cp charge_station_10:/python_redes/02_station/stationdata ./files/imported/station_10
+
     docker container cp electric_vehicle_01:/python_redes/03_vehicle/vehicledata ./files/imported/vehicle_01
     docker container cp electric_vehicle_02:/python_redes/03_vehicle/vehicledata ./files/imported/vehicle_02
     docker container cp electric_vehicle_03:/python_redes/03_vehicle/vehicledata ./files/imported/vehicle_03
@@ -302,6 +319,7 @@ if [ $1 = 'export' ]; then
     docker container cp ./files/export/server_04/clientdata charge_server_04:/python_redes/01_server
     docker container cp ./files/export/server_04/serverdata charge_server_04:/python_redes/01_server
     docker container cp ./files/export/server_04/logs charge_server_04:/python_redes/01_server
+    
     docker container cp ./files/export/station_01/stationdata charge_station_01:/python_redes/02_station
     docker container cp ./files/export/station_02/stationdata charge_station_02:/python_redes/02_station
     docker container cp ./files/export/station_03/stationdata charge_station_03:/python_redes/02_station
@@ -312,6 +330,7 @@ if [ $1 = 'export' ]; then
     docker container cp ./files/export/station_08/stationdata charge_station_08:/python_redes/02_station
     docker container cp ./files/export/station_09/stationdata charge_station_09:/python_redes/02_station
     docker container cp ./files/export/station_10/stationdata charge_station_10:/python_redes/02_station
+
     docker container cp ./files/export/vehicle_01/vehicledata electric_vehicle_01:/python_redes/03_vehicle
     docker container cp ./files/export/vehicle_02/vehicledata electric_vehicle_02:/python_redes/03_vehicle
     docker container cp ./files/export/vehicle_03/vehicledata electric_vehicle_03:/python_redes/03_vehicle
@@ -332,6 +351,7 @@ if [ $1 = 'clearimported' ]; then
     rm -r ./files/imported/server_04/clientdata
     rm -r ./files/imported/server_04/serverdata
     rm -r ./files/imported/server_04/logs
+
     rm -r ./files/imported/station_01/stationdata
     rm -r ./files/imported/station_02/stationdata
     rm -r ./files/imported/station_03/stationdata
@@ -342,6 +362,7 @@ if [ $1 = 'clearimported' ]; then
     rm -r ./files/imported/station_08/stationdata
     rm -r ./files/imported/station_09/stationdata
     rm -r ./files/imported/station_10/stationdata
+
     rm -r ./files/imported/vehicle_01/vehicledata
     rm -r ./files/imported/vehicle_02/vehicledata
     rm -r ./files/imported/vehicle_03/vehicledata
@@ -362,6 +383,7 @@ if [ $1 = 'clearexport' ]; then
     rm -r ./files/export/server_04/clientdata
     rm -r ./files/export/server_04/serverdata
     rm -r ./files/export/server_04/logs
+
     rm -r ./files/export/station_01/stationdata
     rm -r ./files/export/station_02/stationdata
     rm -r ./files/export/station_03/stationdata
@@ -372,6 +394,7 @@ if [ $1 = 'clearexport' ]; then
     rm -r ./files/export/station_08/stationdata
     rm -r ./files/export/station_09/stationdata
     rm -r ./files/export/station_10/stationdata
+
     rm -r ./files/export/vehicle_01/vehicledata
     rm -r ./files/export/vehicle_02/vehicledata
     rm -r ./files/export/vehicle_03/vehicledata
