@@ -158,7 +158,7 @@ def openRouteManager():
     label_actual_reservation_name_list = ctk.CTkLabel(frame2, textvariable= strvar_route_name_list)
     label_actual_reservation_name_list.pack(pady=10)
     
-    selectRouteButton = ctk.CTkButton(frame2,text=' REQUISITAR RESERVA NA ROTA ')
+    selectRouteButton = ctk.CTkButton(frame2,text=' REQUISITAR RESERVA NA ROTA ', command=lambda:vehicle.confirmReservation())
     selectRouteButton.pack(pady=5)
 
     route_selection_Result = ctk.CTkLabel(frame2,textvariable=strvar_route_reservation_result)
@@ -266,7 +266,7 @@ def infoUpdate():
         #Atualiza texto indicativo da lista de horarios em construcao
         strvar_route_name_list.set(json.dumps(vehicle.routeReservationNameList))
         #Atualiza texto de informacao da ultima tentativa de reserva de rota
-        strvar_route_reservation_result.set(json.dumps(vehicle.routeReservationResult))
+        strvar_route_reservation_result.set(vehicle.routeReservationResult)
 
         
         #INFORMACOES DA JANELA DE HISTORICO DE COMPRAS
