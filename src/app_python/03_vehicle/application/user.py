@@ -572,7 +572,7 @@ class User():
             try:
 
                 self.routeReservationNameList.append(self.routeNameList[self.routeReservationAddIndex])
-                self.routeReservationTimeList.append(str(int(self.routeReservationTimeToAdd)))
+                self.routeReservationTimeList.append(str(self.routeReservationTimeToAdd))
                 
                 self.routeReservationAddIndex += 1
             
@@ -596,7 +596,7 @@ class User():
                 epochTime = datetimeTime.timestamp()
 
                 self.routeReservationNameList.append(self.routeNameList[self.routeReservationAddIndex])
-                self.routeReservationTimeList.append(str(int(epochTime)))
+                self.routeReservationTimeList.append(str(epochTime))
                 
                 self.routeReservationAddIndex += 1
 
@@ -609,10 +609,9 @@ class User():
             #Tenta remover o ultimo elemento na lista
             try:
 
-                self.routeReservationNameList.pop()
                 self.routeReservationTimeList.pop()
-                
                 self.routeReservationAddIndex -= 1
+                self.routeReservationNameList.pop()
             
             except:
                 pass
@@ -652,8 +651,8 @@ class User():
             if(response == "OK"):
                 self.routeReservationResult = " Reserva bem-sucedida. Tenha uma boa viagem. "
                 
-                self.routeReservationTimeList = []
-                self.routeReservationNameList = []
+                self.routeReservationNameList.clear()
+                self.routeReservationTimeList.clear()
             else:
                 self.routeReservationResult = " Não foi possível completar a reserva. Tente novamente mais tarde. "
         

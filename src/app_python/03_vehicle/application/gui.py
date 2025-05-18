@@ -132,7 +132,7 @@ def openRouteManager():
     forwardButton = ctk.CTkButton(frame2,text=' > ', command=routeForwardGet)
     forwardButton.pack(pady=20)
 
-    box_actual_time_to_add = ctk.CTkEntry(frame2,placeholder_text=' digite o horario local em formato DD-MM-AAAA/hh:mm ',width=400)
+    box_actual_time_to_add = ctk.CTkEntry(frame2,placeholder_text=' digite o horario local em formato DD/MM/AAAA-hh:mm ',width=400)
     box_actual_time_to_add.pack(pady=10)
 
     def addReservationGet():
@@ -143,9 +143,6 @@ def openRouteManager():
         vehicle.addReservationToList()
 
     def removeReservationGet():
-
-        #Captura o valor do horario a ser reservado
-        vehicle.routeReservationTimeToAdd = box_actual_time_to_add.get()
 
         vehicle.removeLastReservationFromList()
 
