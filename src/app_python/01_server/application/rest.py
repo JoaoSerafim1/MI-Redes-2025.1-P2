@@ -9,7 +9,6 @@
 import threading
 import json
 import socket
-import requests
 import http.server
 
 #Importa os modulos da aplicacao
@@ -62,21 +61,19 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         #Se a URL tiver extensao /submit/ 
         if self.path == '/submit':
             
-            #Obtem informacoes da requisicao
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length).decode('utf-8')
-            
             try:
+
+                #Obtem informacoes da requisicao
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length).decode('utf-8')
+
                 #Transforma o conteudo JSON em objeto python
                 data = json.loads(post_data)
-
-                try:
-                    clientAddressString, _ = self.client_address
-                    #Registra no log
-                    registerLogEntry(fileLock, ["logs", "received"], "HTTPREQUEST", "ADDRESS", clientAddressString)
-                except:
-                    pass
-
+                
+                clientAddressString, _ = self.client_address
+                #Registra no log
+                registerLogEntry(fileLock, ["logs", "received"], "HTTPREQUEST", "ADDRESS", clientAddressString)
+                
                 #Prepara o codigo e o cabecalho da resposta
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -85,8 +82,12 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 #Faz acao desejada, se aplicavel, e obtem retorno
                 response_data = attemptAction(data)
                 self.wfile.write(json.dumps(response_data).encode())
+            
             except:
-                pass
+                
+                response_data = "ERR3"
+                self.wfile.write(json.dumps(response_data).encode())
+        
         else:
             
             self.send_response(404)
@@ -103,20 +104,18 @@ def attemptAction(data):
         #Dados da requisicao (Nome e parametros)
         requestName = data[0]
         requestParameters = data[1]
-
+        
         #Executa a requisica desejada e retorna a resposta
         if (requestName == 'drr'):
             
             return doReservationAlt(fileLock, timeWindow, requestParameters)
-        
-        elif (requestName == 'udr'):
-
+        elif (requestName == 'urr'):
+            
             return undoReservationAlt(fileLock, requestParameters)
-        
         else:
 
-            return "ERR"
+            return "ERR1"
 
     except:
-
-        return "ERR"
+        
+        return "ERR2"
