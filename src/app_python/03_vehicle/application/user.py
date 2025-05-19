@@ -594,12 +594,12 @@ class User():
                 
                 datetimeTime = datetime.datetime(day=dayPortion, month=monthPortion, year=yearPortion, hour=hourPortion, minute=minutePortion, second=0, tzinfo=datetime.timezone.utc)
                 epochTime = datetimeTime.timestamp()
-
+                
                 self.routeReservationNameList.append(self.routeNameList[self.routeReservationAddIndex])
                 self.routeReservationTimeList.append(str(epochTime))
                 
                 self.routeReservationAddIndex += 1
-
+                
             except:
                 pass
     
@@ -658,6 +658,7 @@ class User():
                 
                 self.routeReservationNameList.clear()
                 self.routeReservationTimeList.clear()
+                self.routeReservationAddIndex = 0
             else:
                 self.routeReservationResult = " Não foi possível completar a reserva. Tente novamente mais tarde. "
         

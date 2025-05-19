@@ -139,6 +139,7 @@ def openRouteManager():
 
         #Captura o valor do horario a ser reservado
         vehicle.routeReservationTimeToAdd = box_actual_time_to_add.get()
+        print(vehicle.routeReservationTimeToAdd)
 
         vehicle.addReservationToList()
 
