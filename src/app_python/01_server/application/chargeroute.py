@@ -304,7 +304,7 @@ def doReservation(fileLock: threading.Lock, timeWindow, requestParameters):
                     #Atualiza os valores a serem repassados (achou distancia menor)
                     actualShortestDistance = actualDistance
                     stationID = actualID
-                    coordList = []
+                    coordList.clear()
                     coordList.append(actualStationTable["coord_x"])
                     coordList.append(actualStationTable["coord_y"])
             except:
