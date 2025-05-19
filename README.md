@@ -1,23 +1,26 @@
-# Sistemas distribuídos - Recarga de Veículos Elétricos
+# Sistemas distribuídos - Recarga de Veículos Elétricos com protocolo MQTT e HTTP-REST
 
 Chamamos sistemas distribuídos aqueles compostos por várias instâncias individuais de aplicação, costumeiramente de dois ou mais tipos distintos, que trabalham em conjunto para prover um serviço em massa.
 
 No contexto do MI de Concorrência e Conectividade da UEFS, semestre 2025.1, foi requisitado aos alunos a confecção de um sistema distribuído capaz de coordenar a recarga de veículos elétricos, além de monitorar o nível de carga dos veículos no qual a versão de usuário final está instanciada, e fornecer informações acerca do histórico de compras (recargas) de um usuário final.
 
 O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser executada por um agente distinto:
-- Servidor: Aplicação pertencente aos provedores do serviço. Recebe requisicões das aplicações-cliente (veículo/usuário final e estação de recarga), validando, executando e registrando ações das demais partes. 
+- Servidor: Aplicação pertencente aos provedores do serviço. Recebe requisicões das aplicações-cliente (veículo/usuário final e estação de recarga) e de outros servidores, validando, executando e registrando tão requisições.
 - Estação de recarga: Software instalado em computadores de cada ponto de recarga. Rotineiramente "pergunta" ao servidor se existe veículo a ser recarregado, caso disponível.
-- Veículo (usuário final): Programa responsável por prover a um motorista de automóvel a opção de requisitar serviços de recarga por meio de pagamento e visualizar compras bem-sucedidas registradas no pelo servidor histórico. Como dito anteriormente, também monitora o nível de carga do veículo no qual é instalado.
+- Veículo (usuário final): Programa responsável por prover a um motorista de automóvel a opção de requisitar serviços de recarga por meio de pagamento, reservar pontos em horários desejado e visualizar compras bem-sucedidas registradas em um determinado servidor. Como dito anteriormente, também monitora o nível de carga do veículo no qual é instalado.
   
 # Instalação e uso da aplicação
 
 ## Requisitos básicos
 - Sistema Operacional compatível com protocolo TCP-IP e Python (ex: [Ubuntu](https://ubuntu.com/download), [Windows](https://www.microsoft.com/pt-br/windows/))
 - [Python](https://www.python.org/downloads/) 3.9
+
+## Recursos Adicionais
+- Servidor: Broker MQTT (ex: [Eclipse Mosquitto](https://mosquitto.org/download/))
   
 ## 📦 Instalando e utilizando as diferentes versões do sistema distribuído
 
-As versões do sistema destinadas a usuários distintos estão disponíveis individualmente neste repositório online em formato .zip, na sessão "Releases" (encontrada no canto direito da tela inicial do repositório na maioria dos navegadores).
+As versões do sistema destinadas a usuários distintos estão disponíveis individualmente neste repositório online, em formato .zip, na sessão "Releases" (encontrada no canto direito da tela inicial do repositório na maioria dos navegadores).
 
 ### ☁️ Servidor
 
