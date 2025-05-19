@@ -480,7 +480,7 @@ class User():
                 
                 #Atualiza informacoes da rota exibida/seelecionada
                 self.routeReservationIndex = response[0]
-                self.routeNameList = response[1]
+                self.routeNameList = response[1].copy()
 
         #Caso contrario, atualiza o indice atual da rota analisada
         elif(len(response) >= 2):
@@ -489,7 +489,7 @@ class User():
 
             #Atualiza informacoes da rota exibida/seelecionada
             self.routeReservationIndex = response[0]
-            self.routeNameList = response[1]
+            self.routeNameList = response[1].copy()
 
     #Funcao para obter informacoes da rota no indice anterior
     def routeForward(self):
@@ -550,7 +550,7 @@ class User():
                 
                 #Atualiza informacoes da rota exibida/seelecionada
                 self.routeReservationIndex = response[0]
-                self.routeNameList = response[1]
+                self.routeNameList = response[1].copy()
 
         #Caso contrario, atualiza o indice atual da rota analisada
         elif(len(response) >= 2):
@@ -559,7 +559,7 @@ class User():
 
             #Atualiza informacoes da rota exibida/seelecionada
             self.routeReservationIndex = response[0]
-            self.routeNameList = response[1]
+            self.routeNameList = response[1].copy()
     
     #Funcao para adicionar um novo horario na lista de horario a agendar
     def addReservationToList(self):
@@ -606,15 +606,23 @@ class User():
     #Funcao para remover o ultimo horario da lista de horarios para agendar
     def removeLastReservationFromList(self):
             
+            tempItem1 = 0
+            tempItem2 = 0
+
             #Tenta remover o ultimo elemento na lista
             try:
+                tempItem1 = self.routeReservationTimeList.pop()
 
-                self.routeReservationTimeList.pop()
-                self.routeReservationAddIndex -= 1
-                self.routeReservationNameList.pop()
-            
+                try:
+                    tempItem2 = self.routeReservationNameList.pop()
+                    self.routeReservationAddIndex -= 1
+                
+                except:
+                    self.routeReservationNameList.append(tempItem2)
+
             except:
-                pass
+                self.routeReservationTimeList.append(tempItem1)
+                
     
     #Funcao para confirmar a reserva no indice do servidor atual
     def confirmReservation(self):

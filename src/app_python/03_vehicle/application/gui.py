@@ -256,15 +256,10 @@ def infoUpdate():
         else:
             strvar_next_purchase_info.set(" Não existe compra esperando confirmação. ")
 
-
-        #INFORMACOES DA JANELA DE ROTAS
-        #Atualiza texto de retorno dos nos da rota atual
+        #Atualiza texto de informacao da janela de rota
         strvar_route_node_list.set(json.dumps(vehicle.routeNameList))
-        #Atualiza texto indicativo da lista de horarios em construcao
         strvar_route_name_list.set(json.dumps(vehicle.routeReservationNameList))
-        #Atualiza texto de informacao da ultima tentativa de reserva de rota
         strvar_route_reservation_result.set(vehicle.routeReservationResult)
-
         
         #INFORMACOES DA JANELA DE HISTORICO DE COMPRAS
         #Atualiza texto de informacao da ultima compra realizada
