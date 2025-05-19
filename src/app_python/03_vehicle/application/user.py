@@ -605,23 +605,20 @@ class User():
     
     #Funcao para remover o ultimo horario da lista de horarios para agendar
     def removeLastReservationFromList(self):
-            
-            tempItem1 = 0
-            tempItem2 = 0
 
             #Tenta remover o ultimo elemento na lista
             try:
-                tempItem1 = self.routeReservationTimeList.pop()
+                tempItem = self.routeReservationTimeList.pop()
 
                 try:
-                    tempItem2 = self.routeReservationNameList.pop()
+                    self.routeReservationNameList.pop()
                     self.routeReservationAddIndex -= 1
                 
                 except:
-                    self.routeReservationNameList.append(tempItem2)
+                    self.routeReservationTimeList.append(tempItem)
 
             except:
-                self.routeReservationTimeList.append(tempItem1)
+                pass
                 
     
     #Funcao para confirmar a reserva no indice do servidor atual
