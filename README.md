@@ -295,14 +295,14 @@ bash dockerscript.sh scrap
 ### Broker MQTT de Teste
 Como citado anteriormente, utilizar `test` como entrada para o endereço do broker MQTT, quando solicitado, resulta na uso do [broker MQTT pertencente à EMQX](https://www.emqx.com/en/mqtt/public-mqtt5-broker)
 
-### Passagem de parâmetros durante inicialização da aplicação de veículos
+### Passagem de parâmetros durante inicialização da aplicação de um veículo
 É possível passar parâmetros do veículo durante a execução do comando que inicia a aplicação, sendo que os argumentos passadas diferem caso seja a primeira execução ou não. Caso seja a primeira execução, os parâmetros são, em ordem: capacidade(KWh), Autonomia(Km), nível de bateria (0-1), coordenada x, coordenada y. Caso contrário, os argumentos são apenas: nível de bateria (0-1), coordenada x, coordenada y.
 
 ### Formato do Horário para Reserva
-O horário para reserva sempre é passado como número para o servidor, sendo este número correspondendo à quantidade de segundos passada desde o [EPOCH POSIX](https://www.epoch101.com/), e a aplicação do cliente passará a entrada como número automaticamente caso o texto digitado tenha valor númerico (o que não acontece caso o cliente digite o horário em formato DD/MM/AAAA-hh:mm).
+O horário para reserva sempre é passado como número para o servidor, sendo este número correspondente à quantidade de segundos passados desde o [EPOCH POSIX](https://www.epoch101.com/), e a aplicação do cliente passará a entrada como número automaticamente caso o texto digitado tenha valor númerico (o que não acontece caso o cliente digite o horário em formato DD/MM/AAAA-hh:mm, o que por sua vez resulta em uma conversão antes do envio).
 
 # Aplicações de Desenvolvimento
-O arquivo `data_randomizer.py` encontrado no diretório de desenvolvimento `/src/` pode ser executado diretamente para realizar randomização dos dados de teste (preço do KWh de estação de carga, autonomia de veículo, capacidade de veículo, nível atual de carga de veículo, coordenadas de veículo). Seu funcionamento se dá por distribuição binomial (mais detalhes em comentários em seu código), e os parâmetros de cada distribuição são estabelecidos de tal forma que os valores resultantes acabam por serem parecidos com aqueles observados em situações reais.
+O arquivo `data_randomizer.py` encontrado no diretório de desenvolvimento `/src/` pode ser executado para realizar randomização dos dados de teste (preço do KWh de estação de carga, autonomia de veículo, capacidade de veículo, nível atual de carga de veículo, coordenadas de veículo). Seu funcionamento se dá por distribuição binomial (mais detalhes em comentários em seu código), e os parâmetros de cada distribuição são estabelecidos de tal forma que os valores resultantes acabam por serem parecidos com aqueles observados em situações reais.
 
 # Bibliografia
 
