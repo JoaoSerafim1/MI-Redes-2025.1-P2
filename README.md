@@ -14,6 +14,12 @@ O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser execu
 ## Requisitos básicos
 - Sistema Operacional compatível com protocolo TCP-IP e Python (ex: [Ubuntu](https://ubuntu.com/download), [Windows](https://www.microsoft.com/pt-br/windows/))
 - [Python](https://www.python.org/downloads/) 3.9
+- [Biblioteca Paho-MQTT](https://pypi.org/project/paho-mqtt/) para Python:
+
+  ```
+  pip3 install requests --break-system-packages
+  ```
+  ##### (Instala, DE FORMA FORÇADA, a biblioteca em sistemas tipo Linux, consulte documentação do componente para fazer o mesmo em outros sistemas operacionais)
 
 ## Recursos Adicionais
 - Servidor: Broker MQTT (ex: [Eclipse Mosquitto](https://mosquitto.org/download/))
@@ -23,16 +29,23 @@ O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser execu
 As versões do sistema destinadas a usuários distintos estão disponíveis individualmente neste repositório online, em formato .zip, na sessão "Releases" (encontrada no canto direito da tela inicial do repositório na maioria dos navegadores).
 
 ### ☁️ Servidor
+#### AVISO: O servidor faz uso da [biblioteca requests](https://pypi.org/project/requests/) do Python para a comunicação com outros servidores. Tal biblioteca não faz parte do pacote básico da linguagem.
+```
+  pip3 install requests --break-system-packages
+```
+##### (Instala, DE FORMA FORÇADA, a biblioteca em sistemas tipo Linux, consulte documentação do componente para fazer o mesmo em outros sistemas operacionais)
 
-O arquivo .zip do servidor possui ```server``` antes de seu número de versão. Para iniciar o programa do servidor, execute o arquivo ```server.py```, encontrado no diretório principal da aplicação.
+O arquivo .zip do servidor possui ```server``` antes de seu número de versão. Para iniciar o programa do servidor, execute o arquivo ```server.py```, encontrado no diretório principal da aplicação. Após a inicialização, será pedido au usuário do sistema que insira um endereço para o broker MQTT, sempre na porta TCP 1883. Caso deseje usar um broker MQTT que está rodando com o mesmo endereço do servidor, também na porta TCP 1883, pressione ENTER sem prover entrada alguma.
 
-![Tela inicial](/imgs/server_start_screen.png?raw=true "Instruções do programa e informação do endereço do servidor e do ID para cadastro da próxima estação de carga")
+Nota: Utilizar a entrada "test" resulta na escolha de um broker MQTT de teste pre-definido, por padrão aquele da [EMQX](https://www.emqx.com/en/mqtt/public-mqtt5-broker) (endereço: broker.emqx.io, porta TCP 1883).
+
+![Tela inicial](/imgs/server_waiting.png?raw=true "Instruções do início do programa e prompt de entrada do broker MQTT")
 
 Após o cadastro de uma estação de carga, o servidor automaticamente gerará um novo ID que deverá ser utilizado na próxima operação do tipo, e em seguida exibirá na tela tal informação.
 
-![Tela inicial apos primeira carga](/imgs/server_after_first_station.png?raw=true "Resultado no terminal de uma operação de cadastro de estação de carga")
+![Tela inicial apos cadastrar primeira estação de carga](/imgs/server_after_station.png?raw=true "Resultado no terminal de uma operação de cadastro de estação de carga")
 
-O recebimento de mensagens, bem como a execução de ações em cima do banco de dados do servidor, são todas operações registrados em arquivos de texto (logs), os quais podem ser encontrados nas pastas ```/logs/received/``` (mensagens recebidas) e ```logs/performed/``` (ações executadas pelo servidor).
+O recebimento de mensagens, bem como a execução de ações em cima do banco de dados do servidor, são todas operações registrados em arquivos de texto (logs), os quais podem ser encontrados nas pastas ```/logs/received/``` (recados/requisições lidos/recebidas) e ```logs/performed/``` (ações executadas pelo servidor).
 
 Logs possuem o seguinte formato:
 - Título: YYYY-MM-DDD = Data local
@@ -40,12 +53,15 @@ Logs possuem o seguinte formato:
   - [YYYY-MM-DDD hh:mm:ss.ssssss] => Data e horário locais (24 horas)
   - NAME:
   - NOME-DA-ENTRADA => Informação do nome da entrada no log
-    - RVMSG:         Mensagem recebida
+    - RVMQTT:        Recado MQTT lido
+    - HTTPREQUEST:   Requisição HTTP recebida
     - RGTSTATION:    Registrar nova estação
     - RGTVEHICLE:    Registrar novo veículo
     - GETBOOKED:     Obter informações acerca de possível veículo agendado (estação)
     - FREESPOT:      Liberar estação para agendamento
     - GETDISTANCE:   Obter e retornar informações da estação dispónível mais próxima de um veículo
+    - RTDETAILS:     Obter informações de uma rota em específico
+    - RESROUTE:      Reservar uma rota
     - PHCCHARGE:     Confirmar pagamento e agendar recarga
     - PCHDETAILS:    Obter e retornar informações de uma determinada compra (de acordo com o ID do veículo vinculado à compra e ao índice da compra)
   - TIPO-DA-ENTIDADE => Tipo do identificador da entidade que gerou a entrada
@@ -59,46 +75,57 @@ Logs possuem o seguinte formato:
 
 Pressionar a tecla ENTER durante a execução do servidor inicia o processo de encerramento da aplicação, como já explicitado anteriormente na saída do terminal.
 
-![Tela de encerramento](/imgs/server_terminating.png?raw=true "Resultado da sequência de encerramento do servidor")
+Nota: Por questões de limitações do código, é necessário enviar uma requisição HTTP qualquer ao endereço do servidor, porta 2025, para que ocorra o encerramento correto do programa. No entanto, reiniciar o sistema da máquina do servidor também soluciona o impasse (caso seja impossível o envio de uma requisição HTTP). Tendo em vista que todas as operações de dados ocorrem em cima do sistema de arquivos, é seguro reiniciar o sistema a qualquer momento após iniciar o processo de encerramento do programa, mesmo que este não seja concluído.
+
+![Tela de encerramento](/imgs/server_termination.png?raw=true "Resultado da sequência de encerramento do servidor")
 
 ### 🔋 Estação de Carga
 
-O arquivo .zip da estação possui ```station``` antes de seu número de versão. Para iniciar o programa referente à estação de carga, execute o arquivo ```client.py```, encontrado no diretório principal da aplicação.
+O arquivo .zip da estação possui ```station``` antes de seu número de versão. Para iniciar o programa referente à estação de carga, execute o arquivo ```client.py```, encontrado no diretório principal da aplicação. Ao usuário será pedida a entrada do endereço IP do servidor, seguido do endereço do broker MQTT (porta 1883, entrada vazia para utilizar o broker do servidor conectado), de informações da estação e do ID para cadastro de estação fornecido por um administrador do sistema com acesso ao terminal do servidor. É importante notar que o programa não detecta e não corrige um endereço IP incorreto, sendo necessária a reinicialização para que esse valor seja mudado, em caso de entrada incorreta.
 
-![Tela inicial](/imgs/station_start_screen.png?raw=true "A aplicação requer o endereço IP do servidor logo no seu início")
+Caso um ID correto falhe em cadastrar, basta repetir a entrada.
 
-Ao usuário será pedida a entrada do endereço IP do servidor, seguido de informações da estação e do ID para cadastro de estação fornecido por um administrador do sistema com acesso ao terminal do servidor. É importante notar que o programa não detecta e não corrige um endereço IP incorreto, sendo necessária a reinicialização para que esse valor seja mudado. Ademais, caso um ID correto falhe em cadastrar, basta repeti-lo 1 ou 2 vezes.
+Caso seja a primeira vez que a estação foi utilizada, será pedido ao usuário também informações referentes às coordenadas da estação e o preço de seu KWh, os quais deverão ser inseridos como números, possivemente incluindo decimais.
+
+Nota: Utilizar a entrada "test" para o campo de broker MQTT resulta na escolha de um broker de teste pre-definido, por padrão aquele da [EMQX](https://www.emqx.com/en/mqtt/public-mqtt5-broker) (endereço: broker.emqx.io, porta TCP 1883). Ademais, note que não é necessário que um broker MQTT esteja em execução na máquina da estação sob hipótese alguma, visto que a entrada vazia, como dito anteriormente, resulta na utilização de um broker em execução na máquina do servidor conectado.
+
+![Tela inicial](/imgs/station_waiting.png?raw=true "Resultado caso a estação já tenha sido inicializada anteriormente.")
 
 Após tais informações serem fornecidas e em cada inicialização subsequente do programa, o terminal exibirá o ID da estação e o preço unitário de seu KWh.
 
-![Tela após o cadastro](/imgs/station_after_signup.png?raw=true "Cadastro da estação e tela de boas-vindas")
-
 Quando um veículo agenda com sucesso uma recarga, a estação agendada receberá suas informações em até 1 minuto, inicando o processo de recarga.
+
+![Tela de recarga](/imgs/station_recharge.png?raw=true "Realizando recarga")
 
 Na atual versão de teste do programa, a recarga é feita apenas pressionando a tecla ENTER no terminal da estação.
 
-![Tela após agendamento de recarga](/imgs/station_recharge.png?raw=true "Processo de recarga de um veículo agendado")
-
 ### 🚘 Veículo (Usuário Final)
 
-#### AVISO: Antes de utilizar quaisquer das interfaces gráficas presentes no módulo de veículos, certifique-se de as bibliotecas "TKinter" e "Custom TKinter" estão instaladas diretamente na máquina que exibirá tais interfaces.
+#### AVISO: Antes de utilizar quaisquer das interfaces gráficas presentes no módulo de veículos, certifique-se de as bibliotecas [TKinter](https://pypi.org/project/tk/) e [Custom TKinter](https://pypi.org/project/customtkinter/) estão instaladas diretamente na máquina que exibirá tais interfaces:
 ```console
 sudo apt-get install python3-tk -y && \
 pip3 install customtkinter --break-system-packages
 ```
-##### (Instala as bibliotecas em sistemas tipo Linux, consulte documentação do Python para fazer o mesmo em outros sistemas operacionais)
+##### (Instala, DE FORMA FORÇADA, as bibliotecas em sistemas tipo Linux, consulte documentação do componente para fazer o mesmo em outros sistemas operacionais)
 
-Terceiro e último módulo do sistema, a parte referente ao veículo possui ```vehicle``` antes de seu número de versão do arquivo .zip. Para iniciar a aplicação (incluindo janela gráfica), execute o arquivo ```client.py```, encontrado no diretório principal da aplicação.
+Terceiro e último módulo do sistema, a parte referente ao veículo possui ```vehicle``` antes de seu número de versão do arquivo .zip. Para iniciar a aplicação (incluindo janela gráfica), execute o arquivo ```client.py```, encontrado no diretório principal da aplicação. O processo de cadastro de um veículo só requer ao usuário inserir o endereço IP do servidor (e tal entrada só é requisitada no cadastro, sendo "pulada" em execuções seguintes da aplicação). Assim como para a estação de recarga, o programa não detecta e não corrige um endereço IP incorreto, e portanto pode ser necessária a reinicialização do programa caso seja feita uma entrada incorreta.
 
-![Tela inicial](/imgs/vehicle_start_screen.png?raw=true "A aplicação requer o endereço IP do servidor logo no seu início")
+Em seguida, é perguntado ao usuário o endereço do broker MQTT (porta 1883, entrada vazia para utilizar o broker do servidor conectado).
 
-O processo de cadastro de um veículo só requer ao usuário inserir o endereço IP do servidor e a capacidade em KWh do veículo. Assim como para a estação de recarga, o programa não detecta e não corrige um endereço IP incorreto, e portanto pode ser necessária a reinicialização do programa caso seja feita uma entrada incorreta.
+Nota: Utilizar a entrada "test" para o campo de broker MQTT resulta na escolha de um broker de teste pre-definido, por padrão aquele da [EMQX](https://www.emqx.com/en/mqtt/public-mqtt5-broker) (endereço: broker.emqx.io, porta TCP 1883). Ademais, note que não é necessário que um broker MQTT esteja em execução na máquina da estação sob hipótese alguma, visto que a entrada vazia, como dito anteriormente, resulta na utilização de um broker em execução na máquina do servidor conectado.
+
+![Tela inicial](/imgs/vehicle_waiting.png?raw=true "A aplicação requer o endereço IP do servidor (em caso de cadastro) e uma entrada do broker MQTT (sempre) logo no seu início")
+
+Após sua entrada, a aplicação será exibida em janela gráfica (caso trata-se da primeira execução, ou seja, cadastro, será necessário estabelecer conexão com um servidor antes que a aplicação seja exibida. o que resulta na espera de alguns segundos).
+
+![GUI principal](/imgs/vehicle_gui_main.png?raw=true "Janela principal da aplicação.")
+
 
 A seguir, a interface gráfica do programa será exibida, contendo todas as informações referentes ao nível de carga do veículo (incluindo aviso caso fique abaixo de 30%), estação mais próxima, próxima compra e histórico de compras, bem como botões para executar ações de busca de estação disponível mais próxima (e suas informações), geração de guia de pagamento de serviço, confirmação de pagamento e navegação do histórico de compras.
 
 ![Interface gráfica da aplicação do veículo, figura 1](/imgs/vehicle_after_signup.png?raw=true "Informações do veículo e entrada de comandos para realizar serviços de recarga")
 
-#### IMPORTANTE: Não cabe ao usuário final, por meio da interface gráfica ou do terminal, alterar as informações referentes ao nível da bateria, da posição do veículo ou mesmo da capacidade de carga (após o cadastro). Tais informações estão salvas no arquivo ```vehicle_data.json```, presente na pasta ```/vehicledata/``` a partir do diretório principal da aplicação. A aplicação está configurada para monitorar constantemente tal arquivo de configuração e refletir quaisquer mudanças diretamente nas suas variáveis. Assim sendo, é esperado que o arquivo de propriedades seja alterado por softwares terceiros, os quais devem fazer uso de sensores que não estão presentes no atual ambiente de desenvolvimento e teste.
+#### IMPORTANTE: Não cabe ao usuário final, por meio da interface gráfica ou do terminal, alterar as informações referentes ao nível da bateria, da autonomia do veículo, de sua posição do veículo ou mesmo da capacidade de carga (após o cadastro). Tais informações estão salvas no arquivo ```vehicle_data.json```, presente na pasta ```/vehicledata/``` a partir do diretório principal da aplicação. A aplicação está configurada para monitorar constantemente tal arquivo de configuração e refletir quaisquer mudanças diretamente nas suas variáveis. Assim sendo, é esperado que o arquivo de propriedades seja alterado por softwares terceiros (e não pelo usuário da aplicação), os quais devem fazer uso de sensores que não estão presentes no atual ambiente de desenvolvimento e teste.
 
 Um processo de recarga bem-sucedido inicia-se com a busca pela estação disponível mais próxima, utilizando para tal o botão ```Obter a distância até a estação de recarga mais próxima e o preço do KWh"```.
 As informações obtidas em tal passo serão utilizadas na geração da guia de pagamento e na tentativa de agendamento subsequentes.
@@ -162,11 +189,11 @@ bash dockerscript.sh control 2
 ```console
 sudo apt-get install x11-xserver-utils -y
 ```
-##### (Instala a biblioteca)
+##### (Instala a biblioteca em sistemas do tipo Linux. O acesso remoto a containers por outros tipos de sistemas operacionais NÃO é previsto pelo kit de desenvolvimento deste programa.)
 ```console
 xhost +
 ```
-##### (Habilita a execução remota de programas, deve ser executado sempre que o sistema for reiniciado)
+##### (Habilita a visualização remota de elementos gráficos, deve ser executado sempre que o sistema operacional sofrer reinicialização.)
 
 ### $${\color{blue}"import"}$$ Copia os arquivos e/ou diretórios gerados pelas aplicações em execução nos containers para a pasta `/files/imported`.
 
