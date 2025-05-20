@@ -187,14 +187,14 @@ bash dockerscript.sh build
 ```
 #### AVISO: Devido à natureza de mudança na versão mais recente e de possível indisponibilidade de versões específicas de aplicações, plugins e APIs, é recomendado ao usuário carregar uma versão da imagem já compilada pelo comando `loadimage`, como descrito abaixo, ao invés de compilar sua própria imagem com o comando `build`. Um link do Google Drive contendo uma imagem pré-compilada e testada está incluso no fim deste documento README.md, sessão "Ferramentas de Desenvolvimento Adicionais".
 
-### $${\color{green}"build"}$$  salva a versão mais recente da imagem local no arquivo python-redes-image.tar.
+### $${\color{green}"saveimage"}$$  salva a versão mais recente da imagem local no arquivo python-redes-image.tar.
 
 - Formato fixo:
 ```console
 bash dockerscript.sh saveimage
 ```
 
-### $${\color{green}"loadimage"}$$  carrega uma imagem anterioromente salva pelo comando ```saveimage``` ou baixada e posta no diretório de desenvolvimento `src/` (tal como o próprio arquivo de script).
+### $${\color{green}"loadimage"}$$  carrega uma imagem anterioromente salva pelo comando ```saveimage``` ou baixada e posta no diretório de desenvolvimento `/src/` (tal como o próprio arquivo de script).
 
 - Formato fixo:
 ```console
@@ -259,6 +259,21 @@ Para re-inserir arquivos modificados nos containers, certifique-se de que a hier
 - Formato fixo:
 ```console
 bash dockerscript.sh export
+```
+
+### $${\color{green}"clearimported"}$$ Apaga todos os arquivos atualmente presentes nas várias pastas contidas em `/src/files/imported`.
+
+- Formato fixo:
+```console
+bash dockerscript.sh clearimported
+```
+
+### $${\color{green}"clearexport"}$$ Apaga todos os arquivos atualmente presentes nas várias pastas contidas em `/src/files/export`.
+Para re-inserir arquivos modificados nos containers, certifique-se de que a hierarquia em `/files/export` é a mesma encontrada em `/files/imported`, ou seja, tal como encontrado após o processo de importação.
+
+- Formato fixo:
+```console
+bash dockerscript.sh clearexport
 ```
 
 ### $${\color{green}"scrap"}$$ Apaga todos os containers, redes e imagens criadas pelas ações `build` e `run`.
