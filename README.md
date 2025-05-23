@@ -24,9 +24,9 @@ O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser execu
 # Instalação e uso da aplicação
 
 ## Requisitos básicos
-- Sistema Operacional compatível com protocolo TCP-IP e Python (ex: [Ubuntu](https://ubuntu.com/download), [Windows](https://www.microsoft.com/pt-br/windows/))
+- Sistema operacional compatível com protocolo TCP-IP e Python (ex: [Ubuntu](https://ubuntu.com/download), [Windows](https://www.microsoft.com/pt-br/windows/))
 - [Python](https://www.python.org/downloads/) 3.9
-- [Biblioteca Paho-MQTT](https://pypi.org/project/paho-mqtt/) para Python:
+- [Biblioteca paho-mqtt](https://pypi.org/project/paho-mqtt/) para Python:
 
   ```
   pip3 install requests --break-system-packages
