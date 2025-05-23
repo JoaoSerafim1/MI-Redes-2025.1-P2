@@ -11,13 +11,13 @@ O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser execu
 
 # Sumário (clique para ir até a secção desejada)
 
-[1. Instalação e uso da aplicação](#Instalação_e_uso_da_aplicação)
+[1. Instalação e uso da aplicação](#Instalação%20e%20uso%20da%20aplicação)
 
-[2. Comunicação por protocolo HTTP-REST e MQTT](#Comunicação_por_protocolo_HTTP-REST_e_MQTT)
+[2. Comunicação por protocolo HTTP-REST e MQTT](#Comunicação%20por%20protocolos%20HTTP-REST%20e%20MQTT)
 
-[3. Desenvolvimento com uso de containers por meio de Docker Engine](#Desenvolvimento_com_uso_de_containers_por_meio_de_Docker_Engine)
+[3. Desenvolvimento com uso de containers por meio de Docker Engine](#Desenvolvimento%20com%20uso%20de%20containers%20por%20meio%20de%20Docker%20Engine)
 
-[4. Recursos Adicionais](#Recursos%20Adicionais)
+[4. Ferramentas de Densenvolvimento Adicionais](#Ferramentas%20de%20Densenvolvimento%20Adicionais)
 
 [5. Bibliografia](#Bibliografia)
   
@@ -315,7 +315,7 @@ Como citado anteriormente, utilizar `test` como entrada para o endereço do brok
 ### Formato do Horário para Reserva
 O horário para reserva sempre é passado como número para o servidor, sendo este número correspondente à quantidade de segundos passados desde o [EPOCH POSIX](https://www.epoch101.com/), e a aplicação do cliente passará a entrada como número automaticamente caso o texto digitado tenha valor númerico (o que não acontece caso o cliente digite o horário em formato DD/MM/AAAA-hh:mm, o que por sua vez resulta em uma conversão antes do envio).
 
-# Aplicações de Desenvolvimento
+## Aplicações de Desenvolvimento
 O arquivo `data_randomizer.py` encontrado no diretório de desenvolvimento `/src/` pode ser executado para realizar randomização dos dados de teste (preço do KWh de estação de carga, autonomia de veículo, capacidade de veículo, nível atual de carga de veículo, coordenadas de veículo). Seu funcionamento se dá por distribuição binomial (mais detalhes em comentários em seu código), e os parâmetros de cada distribuição são estabelecidos de tal forma que os valores resultantes acabam por serem parecidos com aqueles observados em situações reais.
 
 # Bibliografia
