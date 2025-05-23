@@ -1,4 +1,4 @@
-Sistemas distribuídos - Recarga de Veículos Elétricos com protocolo MQTT e HTTP-REST
+# Sistemas distribuídos - Recarga de Veículos Elétricos com protocolo MQTT e HTTP-REST
 
 Chamamos sistemas distribuídos aqueles compostos por várias instâncias individuais de aplicação, costumeiramente de dois ou mais tipos distintos, que trabalham em conjunto para prover um serviço em massa.
 
@@ -17,7 +17,9 @@ O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser execu
 
 [3. Desenvolvimento com uso de containers por meio de Docker Engine](#Desenvolvimento_com_uso_de_containers_por_meio_de_Docker_Engine)
 
-[4. Bibliografia](#Bibliografia)
+[4. Recursos Adicionais](#Recursos%20Adicionais)
+
+[5. Bibliografia](#Bibliografia)
   
 # Instalação e uso da aplicação
 
