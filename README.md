@@ -168,7 +168,7 @@ Novamente a partir da tela principal da aplicação, o usuário poderá abrir o 
 
 Note que as compras estão disponíves para consulta apenas no servidor que processou a operação de compra.
 
-![GUI de compras](/imgs/vehicle_purchase.png?raw=true "Detalhes de uma compra registrada no histórico")
+![GUI de compras](/imgs/vehicle_gui_purchases.png?raw=true "Detalhes de uma compra registrada no histórico")
 
 #### IMPORTANTE: Não cabe ao usuário final, por meio da interface gráfica ou do terminal, alterar as informações referentes ao nível da bateria, da autonomia do veículo, de sua posição ou mesmo da capacidade de carga (após o cadastro). Tais informações estão salvas no arquivo ```vehicle_data.json```, presente na pasta ```/vehicledata/``` a partir do diretório principal da aplicação. A aplicação está configurada para monitorar constantemente tal arquivo de configuração e refletir quaisquer mudanças diretamente nas suas variáveis. Assim sendo, é esperado que o arquivo de propriedades seja alterado por softwares terceiros (e não pelo usuário da aplicação, mesmo que isso seja perfeitamente possível e útil em situações de teste), os quais devem fazer uso de sensores que não estão presentes no atual ambiente de desenvolvimento.
 
