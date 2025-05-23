@@ -11,13 +11,13 @@ O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser execu
 
 # Sumário (clique para ir até a secção desejada)
 
-[1. Instalação e uso da aplicação](#Instalação%20e%20uso%20da%20aplicação)
+[1. Instalação e uso da aplicação](#Instalação-e-uso-da-aplicação)
 
-[2. Comunicação por protocolo HTTP-REST e MQTT](#Comunicação%20por%20protocolos%20HTTP-REST%20e%20MQTT)
+[2. Comunicação por protocolo HTTP-REST e MQTT](#Comunicação-por-protocolo-HTTP-REST-e-MQTT)
 
-[3. Desenvolvimento com uso de containers por meio de Docker Engine](#Desenvolvimento%20com%20uso%20de%20containers%20por%20meio%20de%20Docker%20Engine)
+[3. Desenvolvimento com uso de containers por meio de Docker Engine](#Desenvolvimento-com-uso-de-containers-por-meio-de-Docker-Engine)
 
-[4. Ferramentas de Densenvolvimento Adicionais](#Ferramentas%20de%20Densenvolvimento%20Adicionais)
+[4. Ferramentas de Densenvolvimento Adicionais](#Ferramentas-de-Densenvolvimento-Adicionais)
 
 [5. Bibliografia](#Bibliografia)
   
