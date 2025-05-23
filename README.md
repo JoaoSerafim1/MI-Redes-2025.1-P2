@@ -1,4 +1,4 @@
-# Sistemas distribuídos - Recarga de Veículos Elétricos com protocolo MQTT e HTTP-REST
+Sistemas distribuídos - Recarga de Veículos Elétricos com protocolo MQTT e HTTP-REST
 
 Chamamos sistemas distribuídos aqueles compostos por várias instâncias individuais de aplicação, costumeiramente de dois ou mais tipos distintos, que trabalham em conjunto para prover um serviço em massa.
 
@@ -8,6 +8,16 @@ O sistema aqui desenvolvido conta com 3 versões, cada uma destinada a ser execu
 - Servidor: Aplicação pertencente aos provedores do serviço. Recebe requisicões das aplicações-cliente (veículo/usuário final e estação de recarga) e de outros servidores, validando, executando e registrando tão requisições.
 - Estação de recarga: Software instalado em computadores de cada ponto de recarga. Rotineiramente "pergunta" ao servidor se existe veículo a ser recarregado, caso disponível.
 - Veículo (usuário final): Programa responsável por prover a um motorista de automóvel a opção de requisitar serviços de recarga por meio de pagamento, reservar pontos em horários desejado e visualizar compras bem-sucedidas registradas em um determinado servidor. Como dito anteriormente, também monitora o nível de carga do veículo no qual é instalado.
+
+# Sumário (clique para ir até a secção desejada)
+
+[1. Instalação e uso da aplicação](#Instalação_e_uso_da_aplicação)
+
+[2. Comunicação por protocolo HTTP-REST e MQTT](#Comunicação_por_protocolo_HTTP-REST_e_MQTT)
+
+[3. Desenvolvimento com uso de containers por meio de Docker Engine](#Desenvolvimento_com_uso_de_containers_por_meio_de_Docker_Engine)
+
+[4. Bibliografia](#Bibliografia)
   
 # Instalação e uso da aplicação
 
@@ -172,7 +182,9 @@ Note que as compras estão disponíves para consulta apenas no servidor que proc
 
 #### IMPORTANTE: Não cabe ao usuário final, por meio da interface gráfica ou do terminal, alterar as informações referentes ao nível da bateria, da autonomia do veículo, de sua posição ou mesmo da capacidade de carga (após o cadastro). Tais informações estão salvas no arquivo ```vehicle_data.json```, presente na pasta ```/vehicledata/``` a partir do diretório principal da aplicação. A aplicação está configurada para monitorar constantemente tal arquivo de configuração e refletir quaisquer mudanças diretamente nas suas variáveis. Assim sendo, é esperado que o arquivo de propriedades seja alterado por softwares terceiros (e não pelo usuário da aplicação, mesmo que isso seja perfeitamente possível e útil em situações de teste), os quais devem fazer uso de sensores que não estão presentes no atual ambiente de desenvolvimento.
 
-# 🐧 🐢 Como utilizar o arquivo shell script (dockerscript.sh) para executar ações de construção, modificação e acesso interativo do/ao ambiente docker:
+# Comunicação por protocolo HTTP-REST e MQTT
+
+# Desenvolvimento com uso de containers por meio de Docker Engine
 ```console
 bash dockerscript.sh ACAO SUBPARAMETRO
 ```
