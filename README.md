@@ -195,27 +195,27 @@ O protocolo MQTT utiliza da relação de publicação/assinatura para intermedia
 As mensagens postadas utilizando o protocolo MQTT são sempre strings sendo necessária a conversão da lista contendo as informações de cada requisição/resposta para strings antes do envio da mensagem. O objeto lista que gera a string da mensagem possui os seguintes elementos:
 - Endereço do cliente (string)
 - Porta TCP utilizada para conectar-se ao broker MQTT (integer)
-- Parâmetros da requisição ou da resposta (list)
+- Parâmetros da mensagem de requisição ou resposta (list para requisições, objetos variadas para respostas)
 
-Por sua vez, as listas referentes aos parâmetros das requisições possuem o formato:
+Por sua vez, as listas referentes aos parâmetros das mensagens de requisição possuem o formato:
 
 - ID da requisicao (string) => Identificador passado pelo cliente para determinar se o servidor deve executar uma requisição ou apenas retornar o resultado de uma requisição já concluída.
 - nome da requisicao (string): => Sigla que identifica a ação a ser realizada pelo servidor caso a requisição seja válida.
 - parâmetros da requisição (lista) => Informação necessária para que o servidor execute uma ação de acordo com uma requisição. Cada requisição possui seus próprios parâmetros
   - nome da requisição = 'gbv' => parâmetros = [id-da-estação (string)]; Requisição para retornar a uma estação de recarga o veículo atualmente recarregando nela.
-  - nome da requisição = 'rcs' => parâmetros = [id-da-estação (string), coordenada-x(string), coordenada-y(string), preço-unitário(string)]; Requisição para cadastrar uma nova estação de recarga.
-  - nome da requisição = 'rve' => parâmetros = []; Requisição para registrar um novo veículo.
-  - nome da requisição = 'nsr' => parâmetros = [coordenada-x-do-veículo(string),coordenada-y-do-veículo(string), autonomia-do-veículo(string)]; Requisição para retornar a distância até o posto de recarga mais próximo.
-  - nome da requisição = 'bcs' => parâmetros = [id-da-compra(string),id-do-veículo(string),id-da-estação(string),quantidade-paga(string)]; Requisição para tentar realizar (reserva de) abastecimento.
-  - nome da requisição = 'fcs' => parâmetros = [id-da-estação(string)]; Requisição para liberar uma estação de carga(fim do processo de recarga).
-  - nome da requisição = 'gpr' => parâmetros = [id-do-veículo(string),índice-da-compra(string)]; Requisição para retornar as informações de uma compra em específico).
-  - nome da requisição = 'rwr' => parâmetros = [indíce-da-rota(string),destino-da-rota(string)]; Requisição para retornar informações de uma rota em específico.
-  - nome da requisição = 'rrt' => parâmetros = [id-do-veículo(string),indíce-da-rota(string),tempo-de-reserva(list),autonomia-do-veículo(string),coordenada-x(string),coordenada-y(string)]; Requisição para reservar uma rota.
+  - nome da requisição = 'rcs' => parâmetros = [id-da-estação (string), coordenada-x(string), coordenada-y(string), preço-unitário(string)]; Requisição para cadastrar uma nova estação de recarga. Retorna resultado positivo ("OK") ou negativo ("ERR") para a estação.
+  - nome da requisição = 'rve' => parâmetros = []; Requisição para registrar um novo veículo. Retorna resultado positivo ("OK") ou negativo ("ERR") para o veículo.
+  - nome da requisição = 'nsr' => parâmetros = [coordenada-x-do-veículo(string), coordenada-y-do-veículo(string), autonomia-do-veículo(string)]; Requisição para retornar informações do posto de recarga mais próximo disponível para uso. Retorna uma lista contendo ID da estação, distância e preço unitário do KWh, os quais estarão como "0" caso não encontre estação disponível.
+  - nome da requisição = 'bcs' => parâmetros = [id-da-compra(string), id-do-veículo(string), id-da-estação(string), quantidade-paga(string)]; Requisição para tentar realizar (reserva de) abastecimento. Retorna resultado positivo ("OK") ou negativo ("ERR"/"NF") para o veículo.
+  - nome da requisição = 'fcs' => parâmetros = [id-da-estação(string)]; Requisição para liberar uma estação de carga(fim do processo de recarga). Sempre deve retornar "OK" para a estação de recarga.
+  - nome da requisição = 'gpr' => parâmetros = [id-do-veículo(string), índice-da-compra(string)]; Requisição para retornar as informações de uma compra em específico). Retorna uma lista contendo ID da compra, valor total em BRL, preço unitário do KWh e quantidade carregada em KWh, em ordem.
+  - nome da requisição = 'rwr' => parâmetros = [indíce-da-rota(string), destino-da-rota(string)]; Requisição para retornar informações de uma rota em específico. Retorna uma lista contendo o índice real da rota no banco de dados do servidor e uma lista dos nomes das localidades nas quais os servidores contemplados pela rota estão. O índice e a lista de rota serão vazios caso não encontre
+  - nome da requisição = 'rrt' => parâmetros = [id-do-veículo(string), indíce-da-rota(string),tempo-de-reserva(list), autonomia-do-veículo(string), coordenada-x(string), coordenada-y(string)]; Requisição para reservar uma rota.
 
 
-![mqtt_pub](/imgs/mqtt_pub.png?raw=true "Enviando mensagem por meio de mosquitto-client contendo requisição do veículo com endereço 172.18.0.1 para o broker no endereço 172.18.0.2")
+![mqtt_pub](/imgs/mqtt_pub.png?raw=true "Enviando contendo requisição do veículo com endereço 172.18.0.1 para o broker no endereço 172.18.0.2 utilizando o software de terceiro Mosquitto Client")
 
-![mqtt_sub](/imgs/mqtt_sub.png?raw=true "Recebendo resposta por meio de mosquitto-client de uma requisição do veículo com endereço 172.18.0.1 a partir do broker no endereço 172.18.0.2")
+![mqtt_sub](/imgs/mqtt_sub.png?raw=true "Recebendo resposta referente a uma requisição do veículo com endereço 172.18.0.1 a partir do broker no endereço 172.18.0.2 utilizando o software de terceiro Mosquitto Client")
 
 ## Protocolo HTTP
 O protocolo HTTP permite o envio e recebimento de informações através de transferência de hypertexto na WEB.É característico de sua constituição tipagens específicas de requisição como POST ou GET . O mesmo é bastante utilizado na construção de APIs REST (apesar de não ser um requisito para tal). Sua utilização no projeto é conveniente na medida que ja prevê por padrão um retorno para requisições.
@@ -231,7 +231,7 @@ Por sua vez, as listas referentes aos parâmetros das requisições possuem o fo
 - nome da requisição = 'drr' => parâmetros = [id-do-veículo (string),tempo-de-reserva (float), autonomia-do-veículo (float), coordenada-x (float), coordenada-y (float)]; Requisição para retornar uma lista contendo as coordenadas x e y, caso bem sucedida a ação, após tentar realizar a reserva de qualquer ponto de recarga disponível em um servidor específico.
 - nome da requisição = 'urr' => parâmetros = [id-do-veículo (string)]; Requisição para remover um veículo específico que possivelmente está reservado em algum ponto de recarga associado a um servidor específico.
 
-![http_req](/imgs/http_req_1.png?raw=true "Enviando requisição http para criação de reserva a um servidor utilizando o software Insomnia")
+![http_req](/imgs/http_req_1.png?raw=true "Enviando requisição http para criação de reserva a um servidor utilizando o software de terceiro Insomnia")
 
 # Desenvolvimento com uso de containers por meio de Docker Engine
 ```console
@@ -330,7 +330,6 @@ bash dockerscript.sh clearimported
 ```
 
 ### $${\color{green}"clearexport"}$$ Apaga todos os arquivos atualmente presentes nas várias pastas contidas em `/src/files/export`.
-Para re-inserir arquivos modificados nos containers, certifique-se de que a hierarquia em `/files/export` é a mesma encontrada em `/files/imported`, ou seja, tal como encontrado após o processo de importação.
 
 - Formato fixo:
 ```console
