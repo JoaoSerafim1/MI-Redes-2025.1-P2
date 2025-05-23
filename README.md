@@ -172,7 +172,7 @@ Note que as compras estão disponíves para consulta apenas no servidor que proc
 
 #### IMPORTANTE: Não cabe ao usuário final, por meio da interface gráfica ou do terminal, alterar as informações referentes ao nível da bateria, da autonomia do veículo, de sua posição ou mesmo da capacidade de carga (após o cadastro). Tais informações estão salvas no arquivo ```vehicle_data.json```, presente na pasta ```/vehicledata/``` a partir do diretório principal da aplicação. A aplicação está configurada para monitorar constantemente tal arquivo de configuração e refletir quaisquer mudanças diretamente nas suas variáveis. Assim sendo, é esperado que o arquivo de propriedades seja alterado por softwares terceiros (e não pelo usuário da aplicação, mesmo que isso seja perfeitamente possível e útil em situações de teste), os quais devem fazer uso de sensores que não estão presentes no atual ambiente de desenvolvimento.
 
-## 🐧 🐢 Como utilizar o arquivo shell script (dockerscript.sh) para executar ações de construção, modificação e acesso interativo do/ao ambiente docker:
+# 🐧 🐢 Como utilizar o arquivo shell script (dockerscript.sh) para executar ações de construção, modificação e acesso interativo do/ao ambiente docker:
 ```console
 bash dockerscript.sh ACAO SUBPARAMETRO
 ```
