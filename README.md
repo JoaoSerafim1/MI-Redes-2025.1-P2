@@ -362,12 +362,12 @@ Como citado anteriormente, utilizar `test` como entrada para o endereço do brok
 O horário para reserva sempre é passado como número para o servidor, sendo este número correspondente à quantidade de segundos passados desde o [EPOCH POSIX](https://www.epoch101.com/), e a aplicação do cliente passará a entrada como número automaticamente caso o texto digitado tenha valor númerico (o que não acontece caso o cliente digite o horário em formato DD/MM/AAAA-hh:mm, o que por sua vez resulta em uma conversão antes do envio).
 
 ## Aplicações de Desenvolvimento
-O arquivo `data_randomizer.py` encontrado no diretório de desenvolvimento `/src/` pode ser executado para realizar randomização dos dados de teste (preço do KWh de estação de carga, autonomia de veículo, capacidade de veículo, nível atual de carga de veículo, coordenadas de veículo). Seu funcionamento se dá por distribuição binomial (mais detalhes em comentários em seu código), e os parâmetros de cada distribuição são estabelecidos de tal forma que os valores resultantes acabam por serem parecidos com aqueles observados em situações reais.
+O arquivo `data_randomizer.py` encontrado no diretório de desenvolvimento `/src/` pode ser executado para realizar a randomização dos dados de teste (preço do KWh de estação de carga, autonomia de veículo, capacidade de veículo, nível atual de carga de veículo, coordenadas de veículo). Seu funcionamento se dá por distribuição binomial (mais detalhes em comentários em seu código), e os parâmetros de cada distribuição são estabelecidos de tal forma que os valores resultantes acabam por serem parecidos com aqueles observados em situações reais.
 
 # Bibliografia
 
 ## 🔧 📚 Paginas web consultadas para instalacao, solucao de problemas e aprendizado:
-- **Instalacao:**
+- **Instalacao do Docker Engine:**
   - [_Install Docker Engine on Ubuntu_](https://docs.docker.com/engine/install/ubuntu)
 - **Como resolver problemas ao executar o Docker**:
   - [_Cannot connect to the Docker daemon at unix:/var/run/docker.sock. Is the docker daemon running?_](https://stackoverflow.com/questions/44678725/cannot-connect-to-the-docker-daemon-at-unix-var-run-docker-sock-is-the-docker)
@@ -377,3 +377,9 @@ O arquivo `data_randomizer.py` encontrado no diretório de desenvolvimento `/src
 - **Tutoriais**:
   - [_Docker Containers: IPC using Sockets — Part 2_](https://medium.com/techanic/docker-containers-ipc-using-sockets-part-2-834e8ea00768)
   - [_How to get bash or ssh into a running container in background mode?_](https://askubuntu.com/questions/505506/how-to-get-bash-or-ssh-into-a-running-container-in-background-mode/543057#543057)
+  - [MQTT com Python: MQTT e Troca de informações](https://www.youtube.com/watch?v=6zwRG7FQX1k)
+  - [O que é uma API REST?](https://www.redhat.com/pt-br/topics/api/what-is-a-rest-api)
+## Aplicativos de teste
+- **Clientes de protocolo de rede:**
+  - [Mosquitto Eclipse](https://mosquitto.org/)
+  - [Insomnia](https://insomnia.rest/)
