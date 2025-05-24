@@ -186,7 +186,9 @@ Note que as compras estão disponíves para consulta apenas no servidor que proc
 
 # Comunicação por protocolo HTTP-REST e MQTT
 
-Um dos objetivos das novas funcionalidades implementadas na atual iteração do projeto é o uso de protocolos de alto nível para comunicação entre os diversos computadores que executam as aplicações no sistema distribuído. Foram escolhidos, para tal, os protocolos MQTT e HTTP-REST. Segue uma breve descrição dos protocolos e os formatos esperados para as mensagens trocadas entre as partes componentes do sistema distribuído que os utilizam.
+Um dos objetivos das novas funcionalidades implementadas na atual iteração do projeto é o uso de protocolos de alto nível para comunicação entre os diversos computadores que executam as aplicações no sistema distribuído. Foram escolhidos, para tal, os protocolos MQTT e HTTP-REST.
+
+Segue uma breve descrição dos protocolos e os formatos esperados para as mensagens trocadas entre as partes que compõem o sistema distribuído.
 
 ## Protocolo MQTT
 
@@ -201,13 +203,13 @@ Por sua vez, as listas referentes aos parâmetros das mensagens de requisição 
 
 - ID da requisicao (string) => Identificador passado pelo cliente para determinar se o servidor deve executar uma requisição ou apenas retornar o resultado de uma requisição já concluída.
 - nome da requisicao (string): => Sigla que identifica a ação a ser realizada pelo servidor caso a requisição seja válida.
-- parâmetros da requisição (lista) => Informação necessária para que o servidor execute uma ação de acordo com uma requisição. Cada requisição possui seus próprios parâmetros
-  - nome da requisição = 'gbv' => parâmetros = [id-da-estação (string)]; Requisição para retornar a uma estação de recarga o veículo atualmente recarregando nela.
+- parâmetros da requisição (lista) => Informação necessária para que o servidor execute uma ação de acordo com uma requisição. Cada requisição possui seus próprios parâmetros.
   - nome da requisição = 'rcs' => parâmetros = [id-da-estação (string), coordenada-x(string), coordenada-y(string), preço-unitário(string)]; Requisição para cadastrar uma nova estação de recarga. Retorna resultado positivo ("OK") ou negativo ("ERR") para a estação.
+  - nome da requisição = 'gbv' => parâmetros = [id-da-estação (string)]; Requisição para retornar a uma estação de recarga o veículo atualmente recarregando nela.
+  - nome da requisição = 'fcs' => parâmetros = [id-da-estação(string)]; Requisição para liberar uma estação de carga(fim do processo de recarga). Sempre deve retornar "OK" para a estação de recarga.
   - nome da requisição = 'rve' => parâmetros = []; Requisição para registrar um novo veículo. Retorna resultado positivo ("OK") ou negativo ("ERR") para o veículo.
   - nome da requisição = 'nsr' => parâmetros = [coordenada-x-do-veículo(string), coordenada-y-do-veículo(string), autonomia-do-veículo(string)]; Requisição para retornar informações do posto de recarga mais próximo disponível para uso. Retorna uma lista contendo ID da estação, distância e preço unitário do KWh, os quais estarão como "0" caso não encontre estação disponível.
   - nome da requisição = 'bcs' => parâmetros = [id-da-compra(string), id-do-veículo(string), id-da-estação(string), quantidade-paga(string)]; Requisição para tentar realizar (reserva de) abastecimento. Retorna resultado positivo ("OK") ou negativo ("ERR"/"NF") para o veículo.
-  - nome da requisição = 'fcs' => parâmetros = [id-da-estação(string)]; Requisição para liberar uma estação de carga(fim do processo de recarga). Sempre deve retornar "OK" para a estação de recarga.
   - nome da requisição = 'gpr' => parâmetros = [id-do-veículo(string), índice-da-compra(string)]; Requisição para retornar as informações de uma compra em específico). Retorna uma lista contendo ID da compra, valor total em BRL, preço unitário do KWh e quantidade carregada em KWh, em ordem.
   - nome da requisição = 'rwr' => parâmetros = [indíce-da-rota(string), destino-da-rota(string)]; Requisição para retornar informações de uma rota em específico. Retorna uma lista contendo o índice real da rota no banco de dados do servidor e uma lista dos nomes das localidades nas quais os servidores contemplados pela rota estão. O índice e a lista de rota serão vazios caso não encontre
   - nome da requisição = 'rrt' => parâmetros = [id-do-veículo(string), indíce-da-rota(string),tempo-de-reserva(list), autonomia-do-veículo(string), coordenada-x(string), coordenada-y(string)]; Requisição para reservar uma rota.
@@ -374,11 +376,17 @@ O arquivo `data_randomizer.py` encontrado no diretório de desenvolvimento `/src
   - [_Is it possible to use docker without sudo?_](https://askubuntu.com/questions/1165877/is-it-possible-to-use-docker-without-sudo)
   - [_can i install customtkinter on linux_](https://www.reddit.com/r/Tkinter/comments/15sqnvx/can_i_install_customtkinter_on_linux/)
   - [_docker \_tkinter.TclError: couldn't connect to display_](https://stackoverflow.com/questions/49169055/docker-tkinter-tclerror-couldnt-connect-to-display/49229627#49229627)
-- **Tutoriais**:
+- **Tutoriais e documentação de programação**:
   - [_Docker Containers: IPC using Sockets — Part 2_](https://medium.com/techanic/docker-containers-ipc-using-sockets-part-2-834e8ea00768)
   - [_How to get bash or ssh into a running container in background mode?_](https://askubuntu.com/questions/505506/how-to-get-bash-or-ssh-into-a-running-container-in-background-mode/543057#543057)
   - [MQTT com Python: MQTT e Troca de informações](https://www.youtube.com/watch?v=6zwRG7FQX1k)
   - [O que é uma API REST?](https://www.redhat.com/pt-br/topics/api/what-is-a-rest-api)
+  - [_Eclipse Paho™ MQTT Python Client_](https://eclipse.dev/paho/files/paho.mqtt.python/html/index.html)
+  - [_MQTT Allow anonymous login_](https://community.home-assistant.io/t/mqtt-allow-anonymous-login/338345)
+  - [_http.server — HTTP servers_](https://docs.python.org/dev/library/http.server.html#module-http.server)
+  - [_Requests: HTTP for Humans™_](https://requests.readthedocs.io/en/latest/)
+  - [_Entry Widgets in CustomTkinter - Tkinter CustomTkinter 3_](https://www.youtube.com/watch?v=mwalgzuEfvw)
+  - [_New Top Level Windows - Tkinter CustomTkinter 15_](https://www.youtube.com/watch?v=FyPOqu3akDw)
 ## Aplicativos de teste
 - **Clientes de protocolo de rede:**
   - [Mosquitto Eclipse](https://mosquitto.org/)
