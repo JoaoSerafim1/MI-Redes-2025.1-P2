@@ -231,7 +231,7 @@ A requisição enviada por meio de protocolo HTTP tem a opção de ser automatic
 Por sua vez, as listas referentes aos parâmetros das requisições possuem o formato:
 
 - nome da requisição = 'drr' => parâmetros = [id-do-veículo (string),tempo-de-reserva (float), autonomia-do-veículo (float), coordenada-x (float), coordenada-y (float)]; Requisição para retornar uma lista contendo as coordenadas x e y, caso bem sucedida a ação, após tentar realizar a reserva de qualquer ponto de recarga disponível em um servidor específico.
-- nome da requisição = 'urr' => parâmetros = [id-do-veículo (string)]; Requisição para remover um veículo específico que possivelmente está reservado em algum ponto de recarga associado a um servidor específico.
+- nome da requisição = 'urr' => parâmetros = [id-do-veículo (string)]; Requisição para remover um veículo específico que possivelmente está reservado em algum ponto de recarga associado ao servidor que recebeu a requisição.
 
 ![http_req](/imgs/http_req_1.png?raw=true "Enviando requisição http para criação de reserva a um servidor utilizando o software de terceiro Insomnia")
 
